@@ -10,7 +10,7 @@
 앱 ──https──▶ 학교 Nginx(80·443, 공용, Let's Encrypt)
                  │ lolog.java21.net
                  ▼
-          127.0.0.1:NGINX_PORT ─ nginx(우리 Nginx 컨테이너)
+   host.docker.internal:NGINX_PORT ─ nginx(우리 Nginx 컨테이너, 0.0.0.0에 엶)
                                      ├─ /auth/**          → auth:8081
                                      ├─ /api/**           → api:8080
                                      ├─ /lolog-comics/**  → seaweedfs:8333 (GET만)
@@ -19,7 +19,7 @@ Jetson ──SSH 터널(8822)──▶ 127.0.0.1:TUNNEL_API_PORT   → api:8080 
                           127.0.0.1:TUNNEL_REDIS_PORT → redis:6379 (작업 큐)
 ```
 
-- 서버는 여러 학생이 같이 써요. 80·443은 학교 Nginx가 쓰고, 우리는 개인 포트 범위 안의 포트 3개만 `127.0.0.1`에 열어요.
+- 서버는 여러 학생이 같이 써요. 80·443은 학교 Nginx가 쓰고, 우리는 개인 포트 범위 안의 포트 3개만 열어요. nginx(8450)는 학교 Nginx 컨테이너가 닿도록 `0.0.0.0`에, Jetson 터널(8451, 8452)은 `127.0.0.1`에만 열어요. 8450으로 바로 들어와도 `/internal`은 막혀 있고 공개 주소와 같은 것만 보여요.
 - 도메인과 HTTPS(Let's Encrypt)는 학교 Nginx가 맡고, 우리 nginx 컨테이너로는 HTTP로 넘겨요. 공개 주소는 `https://lolog.java21.net`이에요. 우리 nginx는 경로 나누기, `/internal` 막기, 로그인·가입 횟수 제한(IP마다 1분에 10번)을 해요.
 - 데이터는 Docker 볼륨(`lolog_pgdata`, `lolog_redisdata`, `lolog_seaweeddata`)에만 있고 백업하지 않아요. `docker compose down -v`는 쓰지 않아요.
 
@@ -76,7 +76,10 @@ curl -s http://127.0.0.1:8450/auth/health
 강사님이 알려 주신 Nginx 관리 웹사이트에 로그인해서 도메인을 등록해요.
 
 - 도메인: `lolog.java21.net`
-- 넘길 곳: `127.0.0.1:8450` (`.env`의 값)
+- 유형: 리버스 프록시
+- 업스트림: `http://host.docker.internal:8450`
+
+학교 Nginx는 컨테이너 안에서 돌아서 `127.0.0.1`을 적으면 서버가 아니라 그 컨테이너 자신을 가리켜요. 그래서 우리 nginx 포트는 `0.0.0.0`에 열어요(`.env`의 `NGINX_BIND`). Jetson 터널 포트(8451, 8452)는 그대로 `127.0.0.1`에만 열어요.
 
 등록한 뒤 밖에서 `curl https://lolog.java21.net/api/health`가 `{"status":"UP"}`이면 돼요.
 
