@@ -125,7 +125,7 @@ Jetson 워커는 `localhost:6379`(Redis)와 `localhost:18080`(api)로 부르고(
 restrict,port-forwarding,permitopen="127.0.0.1:8452",permitopen="127.0.0.1:8451" ssh-ed25519 AAAA... jetson-1
 ```
 
-Jetson에서는 autossh를 systemd로 띄워요.
+Jetson에서는 autossh를 systemd로 띄워요. 서비스 파일과 설치 순서는 [jetson/README.md](jetson/README.md)에 있어요.
 
 ```bash
 autossh -M 0 -N -p 8822 \
