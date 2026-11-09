@@ -56,6 +56,9 @@ vi .env
 - `S3_*`: 교육기관 MinIO에 팀 계정으로 로그인해 버킷(`S3_BUCKET`, 기본 `lolog-comics`)과 접근 키를 만들어 넣어요. `S3_ENDPOINT`는 서버 안에서 MinIO S3 API에 바로 닿는 주소예요(교육기관 MinIO는 서버의 8000 포트라 `http://host.docker.internal:8000`). 학교 Nginx를 거치는 `https://storage.java21.net`은 안 돼요. imageUrl은 `https://lolog.java21.net/<버킷>/...`로 서명되고 우리 nginx가 Host를 그대로 둔 채 MinIO로 넘겨야 서명이 맞는데, 학교 Nginx는 그 Host를 다시 우리에게 보내요.
 - `API_TAG`, `AUTH_TAG`는 GHCR에 올라간 이미지의 커밋 SHA예요. 처음에는 Actions 첫 배포가 끝난 뒤 그 SHA를 넣거나, Actions가 넣게 둬요.
 
+- `GOOGLE_WEB_CLIENT_ID`: 백엔드가 준 구글 웹 클라이언트 ID(`...apps.googleusercontent.com`)예요. 앱의 serverClientId와 같은 값이에요.
+- `MAIL_*`: 가입 인증번호 메일을 보낼 Gmail SMTP 설정이에요. `MAIL_PASSWORD`는 그 계정의 앱 비밀번호(16자, 공백 없이)이고 백엔드에게 따로 받아요. 레포·채팅에 올리지 않아요.
+
 ### 1-1. FCM 키 넣기
 
 Firebase 콘솔에서 받은 서비스 계정 키(JSON)를 서버의 `~/lolog-infra/secrets/fcm.json`에 둬요. 내 컴퓨터에서:
@@ -126,7 +129,7 @@ lolog-api, lolog-auth 레포(또는 조직)의 Actions secrets에 넣어요. 넣
 - `deploy.sh`는 `.env`의 태그를 바꾸고 그 서비스만 다시 띄운 뒤 `/api/health`(또는 `/auth/health`)를 2분까지 기다려요. 안 뜨면 이전 태그로 되돌리고 Actions를 실패로 끝내요.
 - 손으로 되돌릴 때: `cd ~/lolog-infra && scripts/deploy.sh api <이전 SHA>`
 - 이 레포(compose, nginx 설정)가 바뀌면 서버에서 `git pull` 뒤 `docker compose up -d --force-recreate nginx`(nginx 설정만 바뀐 때) 또는 `docker compose up -d`를 해요. 자동으로 따라가지 않아요. nginx 설정 파일은 바인드 마운트라 `git pull`이나 `vi`로 파일이 새로 써지면 `nginx -s reload`로는 안 읽혀요. 컨테이너를 다시 만들어야 해요.
-- 새 환경 변수가 필요하면 머지 전에 서버 `.env`에 먼저 넣어요.
+- 새 환경 변수가 필요하면 머지 전에 서버 `.env`에 먼저 넣어요. 순서는 `.env`에 값 넣기 → 서버에서 `git pull` → `docker compose up -d` → 서비스 레포 PR 머지예요. `compose.yaml`이 `:?`로 요구하는 값이 `.env`에 없으면 `docker compose`가 모든 명령에서 멈춰서 api 배포도 같이 막혀요.
 
 ## Jetson 터널
 
