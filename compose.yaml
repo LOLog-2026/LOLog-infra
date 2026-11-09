@@ -48,11 +48,11 @@ services:
       S3_REGION: us-east-1
       S3_ACCESS_KEY: ${S3_ACCESS_KEY:?}
       S3_SECRET_KEY: ${S3_SECRET_KEY:?}
-      # FCM_CREDENTIALS_PATH: /run/secrets/fcm.json
-    # FCM을 붙이면 secrets/fcm.json을 서버에 두고 이 주석과 위의 FCM_CREDENTIALS_PATH, 맨 아래 secrets 주석을 푼다(deployment.md 4장).
-    # secrets:
-    #   - source: fcm
-    #     target: fcm.json
+      # 푸시 알림(FCM) 서비스 계정 키(deployment.md 4장). 서버의 secrets/fcm.json을 넣는다.
+      FCM_CREDENTIALS_PATH: /run/secrets/fcm.json
+    secrets:
+      - source: fcm
+        target: fcm.json
     ports:
       # Jetson 워커가 SSH 터널로 /internal을 부르는 길(deployment.md 3·7장). 서버 밖에서는 안 보인다.
       - "127.0.0.1:${TUNNEL_API_PORT:?.env에 TUNNEL_API_PORT가 필요합니다}:8080"
@@ -140,9 +140,11 @@ configs:
     content: |
       {"identities":[{"name":"lolog-api","credentials":[{"accessKey":"${S3_ACCESS_KEY:?}","secretKey":"${S3_SECRET_KEY:?}"}],"actions":["Admin","Read","Write","List","Tagging"]}]}
 
-# secrets:
-#   fcm:
-#     file: ./secrets/fcm.json
+secrets:
+  # 앱과 같은 Firebase 프로젝트의 서비스 계정 키. 레포에 올리지 않는다(.gitignore의 secrets/).
+  # 컨테이너는 root가 아닌 사용자로 돌아서 파일은 644, 폴더는 700으로 둔다(README).
+  fcm:
+    file: ./secrets/fcm.json
 
 volumes:
   pgdata:

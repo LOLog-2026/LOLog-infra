@@ -55,6 +55,18 @@ vi .env
 - 비밀값은 `openssl rand -hex 32`로 만들어요. `JWT_SECRET`, `INTERNAL_TOKEN`, `REDIS_PASSWORD`는 Jetson 워커와 같은 값이어야 해서 팀에 따로 전해요(레포·채팅에 올리지 않아요).
 - `API_TAG`, `AUTH_TAG`는 GHCR에 올라간 이미지의 커밋 SHA예요. 처음에는 Actions 첫 배포가 끝난 뒤 그 SHA를 넣거나, Actions가 넣게 둬요.
 
+### 1-1. FCM 키 넣기
+
+Firebase 콘솔에서 받은 서비스 계정 키(JSON)를 서버의 `~/lolog-infra/secrets/fcm.json`에 둬요. 내 컴퓨터에서:
+
+```bash
+ssh -p 8822 <학번>@s2.java21.net 'mkdir -m 700 -p ~/lolog-infra/secrets'
+scp -P 8822 <받은 키 파일>.json <학번>@s2.java21.net:~/lolog-infra/secrets/fcm.json
+ssh -p 8822 <학번>@s2.java21.net 'chmod 644 ~/lolog-infra/secrets/fcm.json'
+```
+
+api 컨테이너는 root가 아닌 사용자로 돌아서 파일은 644여야 읽혀요. 다른 사람은 폴더(700) 때문에 못 봐요. 파일이 없으면 `docker compose up`이 멈춰요.
+
 ### 2. GHCR 이미지 받을 수 있게 하기
 
 레포가 public이어도 GHCR 패키지는 처음에 비공개로 만들어져요. 둘 중 하나를 해요.
