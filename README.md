@@ -56,6 +56,18 @@ vi .env
 - `S3_*`: 교육기관 MinIO에 팀 계정으로 로그인해 버킷(`S3_BUCKET`, 기본 `lolog-comics`)과 접근 키를 만들어 넣어요. `S3_ENDPOINT`는 서버 안에서 MinIO S3 API에 바로 닿는 주소예요(교육기관 MinIO는 서버의 8000 포트라 `http://host.docker.internal:8000`). 학교 Nginx를 거치는 `https://storage.java21.net`은 안 돼요. imageUrl은 `https://lolog.java21.net/<버킷>/...`로 서명되고 우리 nginx가 Host를 그대로 둔 채 MinIO로 넘겨야 서명이 맞는데, 학교 Nginx는 그 Host를 다시 우리에게 보내요.
 - `API_TAG`, `AUTH_TAG`는 GHCR에 올라간 이미지의 커밋 SHA예요. 처음에는 Actions 첫 배포가 끝난 뒤 그 SHA를 넣거나, Actions가 넣게 둬요.
 
+### 1-1. FCM 키 넣기
+
+Firebase 콘솔에서 받은 서비스 계정 키(JSON)를 서버의 `~/lolog-infra/secrets/fcm.json`에 둬요. 내 컴퓨터에서:
+
+```bash
+ssh -p 8822 <학번>@s2.java21.net 'mkdir -m 700 -p ~/lolog-infra/secrets'
+scp -P 8822 <받은 키 파일>.json <학번>@s2.java21.net:~/lolog-infra/secrets/fcm.json
+ssh -p 8822 <학번>@s2.java21.net 'chmod 644 ~/lolog-infra/secrets/fcm.json'
+```
+
+api 컨테이너는 root가 아닌 사용자로 돌아서 파일은 644여야 읽혀요. 다른 사람은 폴더(700) 때문에 못 봐요. 파일이 없으면 `docker compose up`이 멈춰요.
+
 ### 2. GHCR 이미지 받을 수 있게 하기
 
 레포가 public이어도 GHCR 패키지는 처음에 비공개로 만들어져요. 둘 중 하나를 해요.
