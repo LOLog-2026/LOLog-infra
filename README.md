@@ -1,6 +1,6 @@
 # LOLog-infra
 
-교육기관 서버(s2.java21.net)에 인증, 메인 백엔드, PostgreSQL, Redis, SeaweedFS를 Docker Compose로 띄우는 설정이에요. 주소·포트·환경 변수의 기준은 LOLog-docs의 [배포 설정](https://github.com/LOLog-2026/LOLog-docs/blob/main/spec/deployment.md)이에요.
+교육기관 서버(s2.java21.net)에 인증, 메인 백엔드, PostgreSQL, Redis를 Docker Compose로 띄우는 설정이에요. 만화 이미지는 교육기관 MinIO에 둬요. 주소·포트·환경 변수의 기준은 LOLog-docs의 [배포 설정](https://github.com/LOLog-2026/LOLog-docs/blob/main/spec/deployment.md)이에요.
 
 이미지를 만드는 `Dockerfile`과 배포 워크플로(`.github/workflows/deploy.yml`)는 각 서비스 레포(lolog-api, lolog-auth)에 있고, 이 레포에는 서버에서 띄우는 설정만 둬요.
 
@@ -13,7 +13,7 @@
    host.docker.internal:NGINX_PORT ─ nginx(우리 Nginx 컨테이너, 0.0.0.0에 엶)
                                      ├─ /auth/**          → auth:8081
                                      ├─ /api/**           → api:8080
-                                     ├─ /lolog-comics/**  → seaweedfs:8333 (GET만)
+                                     ├─ /lolog-comics/**  → 교육기관 MinIO(S3_ENDPOINT) (GET만)
                                      └─ /internal/**      → 404
 Jetson ──SSH 터널(8822)──▶ 127.0.0.1:TUNNEL_API_PORT   → api:8080   (/internal)
                           127.0.0.1:TUNNEL_REDIS_PORT → redis:6379 (작업 큐)
@@ -21,13 +21,13 @@ Jetson ──SSH 터널(8822)──▶ 127.0.0.1:TUNNEL_API_PORT   → api:8080 
 
 - 서버는 여러 학생이 같이 써요. 80·443은 학교 Nginx가 쓰고, 우리는 개인 포트 범위 안의 포트 3개만 열어요. nginx(8450)는 학교 Nginx 컨테이너가 닿도록 `0.0.0.0`에, Jetson 터널(8451, 8452)은 `127.0.0.1`에만 열어요. 8450으로 바로 들어와도 `/internal`은 막혀 있고 공개 주소와 같은 것만 보여요.
 - 도메인과 HTTPS(Let's Encrypt)는 학교 Nginx가 맡고, 우리 nginx 컨테이너로는 HTTP로 넘겨요. 공개 주소는 `https://lolog.java21.net`이에요. 우리 nginx는 경로 나누기, `/internal` 막기, 로그인·가입 횟수 제한(IP마다 1분에 10번)을 해요.
-- 데이터는 Docker 볼륨(`lolog_pgdata`, `lolog_redisdata`, `lolog_seaweeddata`)에만 있고 백업하지 않아요. `docker compose down -v`는 쓰지 않아요.
+- 데이터는 Docker 볼륨(`lolog_pgdata`, `lolog_redisdata`)에만 있고 백업하지 않아요. `docker compose down -v`는 쓰지 않아요.
 
 | 파일 | 하는 일 |
 | --- | --- |
 | `compose.yaml` | 서버 스택 전체 |
 | `.env.example` | 서버 `.env`의 틀(포트, 이미지 태그, 비밀값) |
-| `nginx/` | 우리 nginx 컨테이너 설정 |
+| `nginx/` | 우리 nginx 컨테이너 설정. `lolog.conf.template`은 뜰 때 `S3_ENDPOINT`, `S3_BUCKET`이 채워져요 |
 | `scripts/deploy.sh` | 서비스 하나를 새 태그로 바꾸고 헬스체크, 실패하면 이전 태그로 되돌림 |
 | `scripts/ssh-deploy-gate.sh` | GitHub Actions 키가 `deploy.sh`만 부르도록 묶음 |
 | (lolog-api, lolog-auth) `.github/workflows/deploy.yml` | main push → 테스트 → GHCR 이미지 → 서버의 `scripts/deploy.sh` |
@@ -53,6 +53,7 @@ vi .env
 
 - `NGINX_PORT=8450`, `TUNNEL_API_PORT=8451`, `TUNNEL_REDIS_PORT=8452`: 개인 포트 범위 8450~8459에서 골랐어요(8456, 8457은 이미 사용 중). Jetson 터널 설정도 이 값을 써요. 비어 있는지는 `ss -ltn | grep 845`로 확인해요.
 - 비밀값은 `openssl rand -hex 32`로 만들어요. `JWT_SECRET`, `INTERNAL_TOKEN`, `REDIS_PASSWORD`는 Jetson 워커와 같은 값이어야 해서 팀에 따로 전해요(레포·채팅에 올리지 않아요).
+- `S3_*`: 교육기관 MinIO에 팀 계정으로 로그인해 버킷(`S3_BUCKET`, 기본 `lolog-comics`)과 접근 키를 만들어 넣어요. `S3_ENDPOINT`는 서버 안에서 MinIO S3 API에 바로 닿는 주소예요(예: `http://host.docker.internal:9000`). 학교 Nginx를 거치는 `https://storage.java21.net`은 안 돼요. imageUrl은 `https://lolog.java21.net/<버킷>/...`로 서명되고 우리 nginx가 Host를 그대로 둔 채 MinIO로 넘겨야 서명이 맞는데, 학교 Nginx는 그 Host를 다시 우리에게 보내요.
 - `API_TAG`, `AUTH_TAG`는 GHCR에 올라간 이미지의 커밋 SHA예요. 처음에는 Actions 첫 배포가 끝난 뒤 그 SHA를 넣거나, Actions가 넣게 둬요.
 
 ### 2. GHCR 이미지 받을 수 있게 하기
