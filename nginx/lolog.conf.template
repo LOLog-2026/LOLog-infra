@@ -1,4 +1,5 @@
 # 우리 nginx 컨테이너의 경로 나누기(deployment.md 2장).
+# 템플릿이다. nginx 이미지가 뜰 때 ${S3_ENDPOINT}, ${S3_BUCKET}을 compose 환경 변수로 바꿔 conf.d/default.conf로 쓴다.
 # 앞에 학교 Nginx가 있어서 도메인과 HTTPS는 거기서 끝나고, 여기서는 80(HTTP)으로 받는다.
 
 # 학교 Nginx가 붙인 X-Real-IP를 진짜 사용자 주소로 쓴다(횟수 제한이 학교 Nginx 주소 하나로 묶이지 않게).
@@ -38,7 +39,6 @@ server {
     # 변수로 넘기면 요청마다 이름을 다시 찾고, 원래 URI를 자르지 않고 그대로 넘긴다.
     set $auth_upstream http://auth:8081;
     set $api_upstream  http://api:8080;
-    set $s3_upstream   http://seaweedfs:8333;
 
     # 서버끼리 쓰는 주소는 밖에 열지 않는다. Jetson은 터널 포트로 api에 바로 붙는다.
     location /internal/ {
@@ -60,12 +60,15 @@ server {
 
     # 만화 이미지(imageUrl). 미리 서명한 주소에 lolog.java21.net이 Host로 들어가 있어 Host를 바꾸지 않고 넘긴다.
     # GET(과 HEAD)만 받는다.
-    location /lolog-comics/ {
+    location /${S3_BUCKET}/ {
         limit_except GET {
             deny all;
         }
         # 여기서 proxy_set_header를 하나라도 쓰면 위의 Host 설정이 사라져 서명이 깨진다. 넣지 않는다.
-        proxy_pass $s3_upstream;
+        # 교육기관 MinIO의 S3 API(.env의 S3_ENDPOINT, 컨테이너가 뜰 때 넣는다). 우리 컨테이너가 아니라 IP가 바뀌지 않으므로
+        # 변수 없이 적어 뜰 때 한 번 찾는다. Docker DNS(resolver)는 host.docker.internal(/etc/hosts)을 모른다.
+        # 주소 뒤에 경로가 없어서 원래 URI(/버킷/키?서명)를 그대로 넘긴다.
+        proxy_pass ${S3_ENDPOINT};
     }
 
     location / {
