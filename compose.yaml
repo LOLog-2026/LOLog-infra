@@ -89,6 +89,15 @@ services:
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:?}
       API_INTERNAL_URL: http://api:8080
+      # 구글 로그인. 앱이 serverClientId로 쓰는 웹 클라이언트 ID라 비밀값은 아니지만 서버 .env에만 둔다.
+      # auth는 ID 토큰의 aud가 이 값인지 본다. 네이버는 서버에 넣을 키가 없다.
+      GOOGLE_WEB_CLIENT_ID: ${GOOGLE_WEB_CLIENT_ID:?.env에 GOOGLE_WEB_CLIENT_ID(구글 웹 클라이언트 ID)가 필요합니다}
+      # 가입 인증번호 메일(Gmail SMTP, STARTTLS 587). MAIL_PASSWORD는 보내는 계정의 앱 비밀번호다.
+      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:?.env에 MAIL_USERNAME(보내는 Gmail 계정)이 필요합니다}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:?.env에 MAIL_PASSWORD(Gmail 앱 비밀번호)가 필요합니다}
+      MAIL_FROM: ${MAIL_FROM:?.env에 MAIL_FROM(보내는 사람 주소)이 필요합니다}
     depends_on:
       postgres:
         condition: service_healthy
