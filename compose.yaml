@@ -20,13 +20,20 @@ services:
     restart: unless-stopped
     ports:
       - "${NGINX_BIND:-0.0.0.0}:${NGINX_PORT:?.env에 NGINX_PORT(학교 Nginx가 넘겨 줄 개인 포트)가 필요합니다}:80"
+    environment:
+      # nginx 이미지가 뜰 때 templates/의 ${S3_ENDPOINT}, ${S3_BUCKET}을 이 값으로 바꿔 conf.d/default.conf를 만든다.
+      # nginx 변수($host 등)는 같은 이름의 환경 변수가 없어서 그대로 남는다.
+      S3_ENDPOINT: ${S3_ENDPOINT:?.env에 S3_ENDPOINT(교육기관 MinIO S3 주소)가 필요합니다}
+      S3_BUCKET: ${S3_BUCKET:?}
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/lolog.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/lolog.conf.template:/etc/nginx/templates/default.conf.template:ro
+    # S3_ENDPOINT에 host.docker.internal을 쓰면 서버(호스트)를 가리키게 한다(Linux Docker는 따로 적어야 한다).
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       - api
       - auth
-      - seaweedfs
     logging: *logging
 
   api:
@@ -42,10 +49,12 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:?}
-      S3_ENDPOINT: http://seaweedfs:8333
+      # 만화 이미지는 교육기관 MinIO에 둔다(LOLog-docs api-spec, requirements TR-06).
+      # 업로드·삭제는 S3_ENDPOINT로 직접, imageUrl은 공개 주소로 서명해 우리 nginx가 MinIO로 넘긴다.
+      S3_ENDPOINT: ${S3_ENDPOINT:?}
       S3_PUBLIC_ENDPOINT: ${PUBLIC_URL}
-      S3_BUCKET: ${S3_BUCKET}
-      S3_REGION: us-east-1
+      S3_BUCKET: ${S3_BUCKET:?}
+      S3_REGION: ${S3_REGION:-us-east-1}
       S3_ACCESS_KEY: ${S3_ACCESS_KEY:?}
       S3_SECRET_KEY: ${S3_SECRET_KEY:?}
       # FCM_CREDENTIALS_PATH: /run/secrets/fcm.json
@@ -56,13 +65,14 @@ services:
     ports:
       # Jetson 워커가 SSH 터널로 /internal을 부르는 길(deployment.md 3·7장). 서버 밖에서는 안 보인다.
       - "127.0.0.1:${TUNNEL_API_PORT:?.env에 TUNNEL_API_PORT가 필요합니다}:8080"
+    # S3_ENDPOINT에 host.docker.internal을 쓰면 서버(호스트)를 가리키게 한다(Linux Docker는 따로 적어야 한다).
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-      seaweedfs:
-        condition: service_started
     logging: *logging
 
   auth:
@@ -121,25 +131,6 @@ services:
       retries: 20
     logging: *logging
 
-  # 만화 이미지 저장소(S3 호환, deployment.md 5장). 컨테이너 하나, 복제 없음.
-  # 버킷은 메인 백엔드가 처음 쓸 때 만든다(storage/ImageStorage).
-  seaweedfs:
-    image: chrislusf/seaweedfs:4.48
-    restart: unless-stopped
-    command: "server -s3 -s3.config=/etc/seaweedfs/s3.json -dir=/data"
-    volumes:
-      - seaweeddata:/data
-    configs:
-      - source: seaweedfs-s3
-        target: /etc/seaweedfs/s3.json
-    logging: *logging
-
-configs:
-  # 접근 키는 메인 백엔드 하나만 가진다. 값은 .env에서 넣는다.
-  seaweedfs-s3:
-    content: |
-      {"identities":[{"name":"lolog-api","credentials":[{"accessKey":"${S3_ACCESS_KEY:?}","secretKey":"${S3_SECRET_KEY:?}"}],"actions":["Admin","Read","Write","List","Tagging"]}]}
-
 # secrets:
 #   fcm:
 #     file: ./secrets/fcm.json
@@ -147,4 +138,3 @@ configs:
 volumes:
   pgdata:
   redisdata:
-  seaweeddata:
