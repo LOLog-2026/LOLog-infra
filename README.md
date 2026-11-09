@@ -53,7 +53,7 @@ vi .env
 
 - `NGINX_PORT=8450`, `TUNNEL_API_PORT=8451`, `TUNNEL_REDIS_PORT=8452`: 개인 포트 범위 8450~8459에서 골랐어요(8456, 8457은 이미 사용 중). Jetson 터널 설정도 이 값을 써요. 비어 있는지는 `ss -ltn | grep 845`로 확인해요.
 - 비밀값은 `openssl rand -hex 32`로 만들어요. `JWT_SECRET`, `INTERNAL_TOKEN`, `REDIS_PASSWORD`는 Jetson 워커와 같은 값이어야 해서 팀에 따로 전해요(레포·채팅에 올리지 않아요).
-- `S3_*`: 교육기관 MinIO에 팀 계정으로 로그인해 버킷(`S3_BUCKET`, 기본 `lolog-comics`)과 접근 키를 만들어 넣어요. `S3_ENDPOINT`는 서버 안에서 MinIO S3 API에 바로 닿는 주소예요(예: `http://host.docker.internal:9000`). 학교 Nginx를 거치는 `https://storage.java21.net`은 안 돼요. imageUrl은 `https://lolog.java21.net/<버킷>/...`로 서명되고 우리 nginx가 Host를 그대로 둔 채 MinIO로 넘겨야 서명이 맞는데, 학교 Nginx는 그 Host를 다시 우리에게 보내요.
+- `S3_*`: 교육기관 MinIO에 팀 계정으로 로그인해 버킷(`S3_BUCKET`, 기본 `lolog-comics`)과 접근 키를 만들어 넣어요. `S3_ENDPOINT`는 서버 안에서 MinIO S3 API에 바로 닿는 주소예요(교육기관 MinIO는 서버의 8000 포트라 `http://host.docker.internal:8000`). 학교 Nginx를 거치는 `https://storage.java21.net`은 안 돼요. imageUrl은 `https://lolog.java21.net/<버킷>/...`로 서명되고 우리 nginx가 Host를 그대로 둔 채 MinIO로 넘겨야 서명이 맞는데, 학교 Nginx는 그 Host를 다시 우리에게 보내요.
 - `API_TAG`, `AUTH_TAG`는 GHCR에 올라간 이미지의 커밋 SHA예요. 처음에는 Actions 첫 배포가 끝난 뒤 그 SHA를 넣거나, Actions가 넣게 둬요.
 
 ### 2. GHCR 이미지 받을 수 있게 하기
