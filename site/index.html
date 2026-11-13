@@ -92,7 +92,7 @@
 
   /* 첫 화면 */
   .hero { padding-block: 56px 48px; }
-  .hero .wrap { display: grid; grid-template-columns: 1.2fr 1fr; gap: 40px; align-items: center; }
+  .hero .wrap { display: grid; grid-template-columns: 1.1fr 1fr; gap: 32px; align-items: center; }
   .hero h1 {
     margin: 0 0 16px;
     font-size: clamp(34px, 6vw, 54px);
@@ -153,9 +153,17 @@
     border-radius: 20px;
     padding: 22px 22px 18px;
     box-shadow: 0 14px 40px -24px rgba(25, 31, 40, .35);
-    transform: rotate(1.2deg);
     min-width: 0;
   }
+  /* 에피소드 여러 장이 겹쳐 쌓인 모양: 같은 칸에 겹쳐 놓고 뒤 장은 기울여 삐져나오게 */
+  .deck { display: grid; padding: 54px 18px 0 18px; min-width: 0; align-self: start; }
+  .deck > .episode { grid-area: 1 / 1; align-self: start; transition: transform .35s ease; }
+  .deck .front { position: relative; z-index: 3; transform: rotate(1.5deg) translate(6px, 14px); }
+  .deck .back-1 { z-index: 2; transform: rotate(7deg) translate(30px, -34px); box-shadow: 0 10px 30px -22px rgba(25, 31, 40, .3); }
+  .deck .back-2 { z-index: 1; transform: rotate(-7deg) translate(-24px, -44px); box-shadow: 0 10px 30px -22px rgba(25, 31, 40, .25); }
+  .deck .back h3, .deck .back .lines { opacity: .55; }
+  .deck:hover .back-1 { transform: rotate(10deg) translate(44px, -42px); }
+  .deck:hover .back-2 { transform: rotate(-10deg) translate(-38px, -54px); }
   .episode .chip { display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); letter-spacing: .02em; }
   .episode h3 { margin: 10px 0 14px; font-size: 18px; letter-spacing: -0.02em; }
   .lines { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
@@ -240,7 +248,10 @@
     .hero { padding-block: 32px 24px; }
     .hero .wrap, .privacy-grid, .panel.consent { grid-template-columns: 1fr; }
     .steps { grid-template-columns: 1fr; }
-    .episode { transform: none; }
+    .deck { padding: 28px 16px 8px 18px; }
+    .deck .front { transform: rotate(1deg) translate(0, 12px); }
+    .deck .back-1 { transform: rotate(4deg) translate(12px, -10px); }
+    .deck .back-2 { transform: rotate(-4deg) translate(-12px, -16px); }
     section { padding-block: 36px; }
   }
   @media (max-width: 460px) {
@@ -301,7 +312,26 @@
         <p class="fine">안드로이드 전용 · APK 파일로 설치해요 · 구글·네이버 계정이나 이메일로 가입</p>
       </div>
 
-      <figure class="episode" aria-label="LOLog가 만든 에피소드 예시">
+      <div class="deck" aria-label="LOLog가 만든 에피소드 예시">
+      <figure class="episode back back-2" aria-hidden="true">
+        <span class="chip">추억</span>
+        <h3>졸업 사진 찍는데 다 같이 눈 감은 이야기</h3>
+        <ul class="lines">
+          <li><span class="who">화자2</span><span>하나, 둘… 셋!</span></li>
+          <li><span class="who">화자1</span><span>잠깐, 이거 다 감았잖아.</span></li>
+        </ul>
+        <div class="meta"><span>장소 · 운동장</span><span>예시 에피소드</span></div>
+      </figure>
+      <figure class="episode back back-1" aria-hidden="true">
+        <span class="chip">황당</span>
+        <h3>택배 기사님이 고양이 이름을 알던 이야기</h3>
+        <ul class="lines">
+          <li><span class="who">화자1</span><span>보리 잘 있죠? 하시는 거야.</span></li>
+          <li><span class="who">화자2</span><span>우리 집 고양이 이름을 어떻게?</span></li>
+        </ul>
+        <div class="meta"><span>장소 · 현관</span><span>예시 에피소드</span></div>
+      </figure>
+      <figure class="episode front">
         <span class="chip">웃김</span>
         <h3>라면 물 맞추다 냄비째 엎은 이야기</h3>
         <ul class="lines">
@@ -311,6 +341,7 @@
         </ul>
         <div class="meta"><span>장소 · 자취방</span><span>예시 에피소드</span></div>
       </figure>
+      </div>
     </div>
   </div>
 
