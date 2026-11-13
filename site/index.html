@@ -110,6 +110,9 @@
     position: relative; display: inline-block;
     font-family: var(--font-hand); font-weight: 400;
     color: var(--accent); font-size: 1.32em; line-height: 1;
+    /* 손글씨체는 굵기가 하나뿐이라 글자 테두리를 같은 색으로 그어 굵게 보여요 */
+    -webkit-text-stroke: 0.045em currentColor;
+    paint-order: stroke fill;
     transform: rotate(-3deg); transform-origin: left bottom;
     margin-right: 0.08em;
   }
