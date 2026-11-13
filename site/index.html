@@ -101,6 +101,25 @@
     font-weight: 800;
     text-wrap: balance;
   }
+  /* 첫 화면 문구: 세 줄을 계단처럼 밀고, 가운데 줄은 손글씨로 크게 */
+  .headline { display: flex; flex-direction: column; gap: 2px; }
+  .headline > span { display: block; }
+  .hl-2 { margin-left: 0.9em; }
+  .hl-3 { margin-left: 0.35em; position: relative; width: fit-content; }
+  .hl-pen {
+    position: relative; display: inline-block;
+    font-family: var(--font-hand); font-weight: 400;
+    color: var(--accent); font-size: 1.32em; line-height: 1;
+    transform: rotate(-3deg); transform-origin: left bottom;
+    margin-right: 0.08em;
+  }
+  .squiggle { position: absolute; left: 0; right: 0; bottom: -0.12em; width: 100%; height: 0.32em; overflow: visible; }
+  .squiggle path { fill: none; stroke: var(--accent); stroke-width: 3.5; stroke-linecap: round; opacity: .55; }
+  .pop { position: absolute; right: -0.9em; top: -0.35em; font-size: 0.55em; color: var(--accent); transform: rotate(12deg); }
+  @media (prefers-reduced-motion: no-preference) {
+    .squiggle path { stroke-dasharray: 260; stroke-dashoffset: 260; animation: draw 0.9s 0.3s ease-out forwards; }
+    @keyframes draw { to { stroke-dashoffset: 0; } }
+  }
   .mark { background: linear-gradient(transparent 58%, var(--accent-soft) 58%, var(--accent-soft) 92%, transparent 92%); padding: 0 2px; }
   .hero p.lead { margin: 0 0 28px; font-size: 18px; color: var(--muted); max-width: 32em; }
   .actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
@@ -258,7 +277,11 @@
   <div class="hero">
     <div class="wrap">
       <div>
-        <h1>흘러간 일상 속<br><span class="mark">재밌는 순간</span>을<br>다시 꺼내 봐요</h1>
+        <h1 class="headline">
+          <span class="hl-1">흘러간 일상 속</span>
+          <span class="hl-2"><span class="hl-pen">재밌는 순간<svg class="squiggle" viewBox="0 0 220 18" preserveAspectRatio="none" aria-hidden="true"><path d="M3 12 C 30 3, 52 17, 80 9 S 130 3, 158 10 S 200 15, 217 6"/></svg></span>을</span>
+          <span class="hl-3">다시 꺼내 봐요<span class="pop" aria-hidden="true">✦</span></span>
+        </h1>
         <p class="lead">대화를 녹음해 두면 LOLog가 재밌는 이야기를 찾아 에피소드로 정리해요. 마음에 드는 에피소드는 4컷 만화와 쇼츠로 만들어 친구와 나눌 수 있어요.</p>
         <div class="actions">
           <a class="btn" data-apk aria-disabled="true" role="link">
