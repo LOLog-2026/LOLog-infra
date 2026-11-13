@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>LOLog</title>
-<meta name="description" content="LOLog는 대화를 녹음하면 재밌는 순간을 찾아 카드와 4컷 만화, 쇼츠로 남겨 주는 안드로이드 앱이에요.">
+<meta name="description" content="LOLog는 대화를 녹음하면 재밌는 순간을 찾아 에피소드와 4컷 만화, 쇼츠로 남겨 주는 안드로이드 앱이에요.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap">
@@ -52,6 +52,7 @@
   }
 
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
   html { -webkit-text-size-adjust: 100%; }
   body {
     margin: 0;
@@ -109,8 +110,15 @@
   .btn.ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--line); }
   .btn.ghost:hover { background: var(--canvas); }
   .fine { margin: 14px 0 0; font-size: 13px; color: var(--muted); }
+  /* 안드로이드가 아니면 받기 버튼을 끄고 이유를 보여 줘요 */
+  .btn[aria-disabled="true"] { background: var(--canvas); color: var(--muted); cursor: not-allowed; pointer-events: none; }
+  .get-note { margin: 12px 0 0; font-size: 14px; color: var(--ink); font-weight: 600; }
+  .get-note:empty { display: none; }
+  .qr { display: flex; align-items: center; gap: 14px; margin-top: 16px; }
+  .qr .code { background: #ffffff; border-radius: 14px; padding: 6px; line-height: 0; border: 1.5px solid var(--line); flex: none; }
+  .qr p { margin: 0; font-size: 14px; color: var(--muted); max-width: 16em; }
 
-  /* 카드 한 장(앱의 에피소드 카드 모양) */
+  /* 에피소드 한 장(앱의 에피소드 모양) */
   .episode {
     background: var(--paper);
     border: 1.5px solid var(--line);
@@ -236,18 +244,19 @@
     <div class="wrap">
       <div>
         <h1>친구와 나눈 대화 속 <span class="mark">빵 터진 순간</span>을 남겨 드려요</h1>
-        <p class="lead">대화를 녹음해 두면 LOLog가 재밌는 이야기를 찾아 카드로 정리해요. 마음에 드는 카드는 4컷 만화와 쇼츠로 만들어 친구와 나눌 수 있어요.</p>
+        <p class="lead">대화를 녹음해 두면 LOLog가 재밌는 이야기를 찾아 에피소드로 정리해요. 마음에 드는 에피소드는 4컷 만화와 쇼츠로 만들어 친구와 나눌 수 있어요.</p>
         <div class="actions">
-          <a class="btn" href="https://github.com/LOLog-2026/LOLog-app/releases/latest/download/lolog.apk">
+          <a class="btn" data-apk aria-disabled="true" role="link">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>
             안드로이드 앱 받기
           </a>
           <a class="btn ghost" href="#privacy">녹음과 개인정보</a>
         </div>
+        <p class="get-note" data-get-note></p>
         <p class="fine">안드로이드 전용 · APK 파일로 설치해요 · 구글·네이버 계정이나 이메일로 가입</p>
       </div>
 
-      <figure class="episode" aria-label="LOLog가 만든 카드 예시">
+      <figure class="episode" aria-label="LOLog가 만든 에피소드 예시">
         <span class="chip">웃김</span>
         <h3>라면 물 맞추다 냄비째 엎은 이야기</h3>
         <ul class="lines">
@@ -255,7 +264,7 @@
           <li><span class="who">화자2</span><span>그냥 눈대중으로 해, 감으로.</span></li>
           <li><span class="who">화자1</span><span>…감이 냄비를 엎었는데?</span></li>
         </ul>
-        <div class="meta"><span>장소 · 자취방</span><span>예시 카드</span></div>
+        <div class="meta"><span>장소 · 자취방</span><span>예시 에피소드</span></div>
       </figure>
     </div>
   </div>
@@ -275,8 +284,8 @@
           <p>대화는 폰 안에서 바로 글자로 바뀌어요. 녹음 중 1시간마다, 그리고 녹음이 끝나면 글이 올라가요.</p>
         </li>
         <li>
-          <h3>재밌는 이야기만 카드로</h3>
-          <p>서버가 대화 글에서 이야기를 찾아 카드로 만들고 알림을 보내요. 이야기가 아닌 글은 바로 지워요.</p>
+          <h3>재밌는 이야기만 에피소드로</h3>
+          <p>서버가 대화 글에서 이야기를 찾아 에피소드로 만들고 알림을 보내요. 이야기가 아닌 글은 바로 지워요.</p>
         </li>
       </ol>
     </div>
@@ -290,13 +299,13 @@
       <div class="tabs-strip">
         <div class="tab">
           <p class="name">에피소드</p>
-          <p class="where">카드 보관함</p>
+          <p class="where">보관함</p>
           <ul>
-            <li>녹음과 글에서 만든 카드 모아 보기</li>
-            <li>직접 쓴 글이나 연결한 블로그 글로 카드 만들기</li>
+            <li>녹음과 글에서 만든 에피소드 모아 보기</li>
+            <li>직접 쓴 글이나 연결한 블로그 글로 에피소드 만들기</li>
             <li>화자 이름·대사·장소 고치기</li>
-            <li>카드에 담긴 순간 다시 듣기(음성 저장을 켠 녹음만)</li>
-            <li>카드 지우기</li>
+            <li>에피소드에 담긴 순간 다시 듣기(음성 저장을 켠 녹음만)</li>
+            <li>에피소드 지우기</li>
           </ul>
           <div class="kinds"><span class="kind laugh">웃김</span><span class="kind absurd">황당</span><span class="kind memory">추억</span></div>
         </div>
@@ -304,8 +313,8 @@
           <p class="name">컨텐츠</p>
           <p class="where">4컷 · 쇼츠</p>
           <ul>
-            <li>카드로 4컷 만화 만들기(카드마다 3번)</li>
-            <li>카드로 쇼츠 영상 만들기(카드마다 2번)</li>
+            <li>에피소드로 4컷 만화 만들기(에피소드마다 3번)</li>
+            <li>에피소드로 쇼츠 영상 만들기(에피소드마다 2번)</li>
             <li>폰에 저장, 카카오톡·인스타그램·다른 앱으로 공유</li>
           </ul>
         </div>
@@ -339,7 +348,7 @@
           </ul>
         </div>
       </div>
-      <p class="hand tab-note">홈 → 녹음 → 에피소드에 카드 → 컨텐츠에서 만화로!</p>
+      <p class="hand tab-note">홈에서 녹음 → 에피소드 확인 → 컨텐츠에서 만화로!</p>
     </div>
   </section>
 
@@ -347,7 +356,7 @@
     <div class="wrap">
       <p class="eyebrow">녹음과 개인정보</p>
       <h2>녹음한 대화를 이렇게 다뤄요</h2>
-      <p class="section-lead">대화 글과 음성은 LOLog 팀이 운영하는 서버에서만 처리하고 다른 회사로 보내지 않아요. 내 카드와 음성은 나만 볼 수 있어요.</p>
+      <p class="section-lead">대화 글과 음성은 LOLog 팀이 운영하는 서버에서만 처리하고 다른 회사로 보내지 않아요. 내 에피소드와 음성은 나만 볼 수 있어요.</p>
 
       <div class="privacy-grid">
         <div class="panel consent">
@@ -367,9 +376,9 @@
           <h3>대화 글</h3>
           <ul>
             <li>녹음은 폰 안에서 글자로 바뀌고, 서버에는 글만 올라가요.</li>
-            <li>서버는 글에서 이야기를 찾아 카드로 만들어요.</li>
-            <li>카드가 되지 않은 글은 이야기 찾기가 끝나면 바로 지워요.</li>
-            <li>카드는 사용자가 지울 때까지 보관해요.</li>
+            <li>서버는 글에서 이야기를 찾아 에피소드로 만들어요.</li>
+            <li>에피소드가 되지 않은 글은 이야기 찾기가 끝나면 바로 지워요.</li>
+            <li>에피소드는 사용자가 지울 때까지 보관해요.</li>
           </ul>
         </div>
 
@@ -378,7 +387,7 @@
           <ul>
             <li>"음성도 저장"을 켠 녹음만 음성 파일이 서버에 올라가요. 기본은 꺼져 있어요.</li>
             <li>전체 녹음 파일은 녹음이 끝난 때부터 7일 뒤 서버에서 지워요.</li>
-            <li>카드에 담긴 구간의 음성만 따로 남기고, 카드를 지우면 함께 지워요.</li>
+            <li>에피소드에 담긴 구간의 음성만 따로 남기고, 에피소드를 지우면 함께 지워요.</li>
             <li>폰에 있던 음성 파일은 서버에 올린 뒤 지워요.</li>
           </ul>
         </div>
@@ -392,14 +401,14 @@
           <tbody>
             <tr><td>이메일 주소</td><td>가입할 때, 구글·네이버로 로그인할 때(이메일 제공 동의가 필요해요)</td><td>로그인과 계정 구분</td><td>회원 탈퇴할 때</td></tr>
             <tr><td>닉네임</td><td>직접 정할 때</td><td>친구와 방에서 나를 보여 줄 때</td><td>회원 탈퇴할 때</td></tr>
-            <tr><td>대화 글</td><td>녹음이 끝나거나 1시간이 지날 때</td><td>이야기를 찾아 카드 만들기</td><td>카드가 안 된 글은 바로, 카드는 지울 때</td></tr>
-            <tr><td>음성</td><td>"음성도 저장"을 켰을 때만</td><td>카드에서 그 순간 다시 듣기</td><td>전체 파일은 7일 뒤, 카드 구간은 카드를 지울 때</td></tr>
+            <tr><td>대화 글</td><td>녹음이 끝나거나 1시간이 지날 때</td><td>이야기를 찾아 에피소드 만들기</td><td>에피소드가 안 된 글은 바로, 에피소드는 지울 때</td></tr>
+            <tr><td>음성</td><td>"음성도 저장"을 켰을 때만</td><td>에피소드에서 그 순간 다시 듣기</td><td>전체 파일은 7일 뒤, 에피소드 구간은 에피소드를 지울 때</td></tr>
             <tr><td>프로필 사진</td><td>프로필 캐릭터를 만들 때</td><td>캐릭터 그림 만들기</td><td>그림을 다 만들면 바로</td></tr>
-            <tr><td>푸시 알림 토큰</td><td>로그인할 때</td><td>카드·만화 완성 알림</td><td>로그아웃하거나 탈퇴할 때</td></tr>
+            <tr><td>푸시 알림 토큰</td><td>로그인할 때</td><td>에피소드·만화 완성 알림</td><td>로그아웃하거나 탈퇴할 때</td></tr>
           </tbody>
         </table>
       </div>
-      <p class="fine">회원 탈퇴를 하면 카드, 만화, 쇼츠, 대화 글, 음성, 푸시 알림 토큰을 모두 지워요. 보낸 오류 신고와 의견만 보낸 사람 정보를 지운 채 남아요.</p>
+      <p class="fine">회원 탈퇴를 하면 에피소드, 만화, 쇼츠, 대화 글, 음성, 푸시 알림 토큰을 모두 지워요. 보낸 오류 신고와 의견만 보낸 사람 정보를 지운 채 남아요.</p>
     </div>
   </section>
 
@@ -407,12 +416,19 @@
     <div class="wrap">
       <div>
         <h2>LOLog 받기</h2>
-        <p>버튼을 누르면 가장 최근 버전의 APK를 받아요. 설치할 때 "출처를 알 수 없는 앱" 허용이 필요할 수 있어요.</p>
+        <p>안드로이드 폰에서 버튼을 누르면 가장 최근 버전의 APK를 받아요. 설치할 때 "출처를 알 수 없는 앱" 허용이 필요할 수 있어요. 아이폰·아이패드와 컴퓨터에서는 받을 수 없어요.</p>
       </div>
-      <a class="btn" href="https://github.com/LOLog-2026/LOLog-app/releases/latest/download/lolog.apk">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>
-        안드로이드 앱 받기
-      </a>
+      <div>
+        <a class="btn" data-apk aria-disabled="true" role="link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>
+          안드로이드 앱 받기
+        </a>
+        <p class="get-note" data-get-note></p>
+        <div class="qr" data-qr hidden>
+          <div class="code"><svg xmlns="http://www.w3.org/2000/svg" width="132" height="132" viewBox="0 0 116 116" role="img" aria-label="lolog.java21.net QR 코드"><path transform="scale(4)" class="qrline" stroke="#191f28" d="M2 2.5h7m4 0h4m3 0h7m-25 1h1m5 0h1m1 0h3m7 0h1m5 0h1m-25 1h1m1 0h3m1 0h1m1 0h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h3m1 0h1m-25 1h1m1 0h3m1 0h1m1 0h3m2 0h2m3 0h1m1 0h3m1 0h1m-25 1h1m1 0h3m1 0h1m2 0h1m4 0h1m1 0h1m1 0h1m1 0h3m1 0h1m-25 1h1m5 0h1m3 0h2m1 0h1m2 0h1m1 0h1m5 0h1m-25 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-17 1h3m1 0h1m-13 1h1m5 0h1m1 0h2m1 0h1m1 0h1m1 0h1m1 0h2m2 0h3m-23 1h5m2 0h2m2 0h1m2 0h1m3 0h5m-23 1h1m1 0h1m1 0h6m4 0h1m1 0h1m3 0h1m1 0h2m-22 1h3m3 0h1m2 0h1m1 0h2m1 0h1m1 0h3m2 0h1m-24 1h2m2 0h3m1 0h4m1 0h1m1 0h1m1 0h2m4 0h1m-25 1h2m1 0h2m4 0h1m2 0h2m1 0h2m2 0h1m3 0h1m-24 1h1m2 0h1m2 0h1m1 0h1m1 0h1m1 0h4m1 0h1m1 0h3m1 0h2m-25 1h1m3 0h1m3 0h2m2 0h1m1 0h2m2 0h2m1 0h2m1 0h1m-25 1h1m1 0h6m1 0h2m1 0h3m1 0h5m1 0h1m-15 1h3m1 0h2m2 0h1m3 0h1m-21 1h7m4 0h1m4 0h1m1 0h1m1 0h1m3 0h1m-25 1h1m5 0h1m2 0h1m1 0h1m4 0h1m3 0h1m2 0h2m-25 1h1m1 0h3m1 0h1m2 0h1m1 0h10m1 0h1m-23 1h1m1 0h3m1 0h1m2 0h4m1 0h2m1 0h2m4 0h2m-25 1h1m1 0h3m1 0h1m2 0h2m1 0h1m1 0h1m6 0h2m1 0h1m-25 1h1m5 0h1m2 0h2m3 0h1m1 0h2m1 0h2m3 0h1m-25 1h7m1 0h1m1 0h2m4 0h1m4 0h1m2 0h1"/></svg></div>
+          <p>안드로이드 폰 카메라로 찍으면 이 페이지가 열려요. 폰에서 앱을 받아 주세요.</p>
+        </div>
+      </div>
     </div>
   </section>
 </main>
@@ -423,6 +439,36 @@
     <a href="https://github.com/LOLog-2026/LOLog-app/releases">버전 기록</a>
   </div>
 </footer>
+
+<script>
+  // 안드로이드 기기에서만 받기 버튼을 켜요. 아이폰·아이패드·컴퓨터는 버튼을 끄고 이유를 보여 줘요.
+  (function () {
+    var APK = "https://github.com/LOLog-2026/LOLog-app/releases/latest/download/lolog.apk";
+    var ua = navigator.userAgent || "";
+    var platform = (navigator.userAgentData && navigator.userAgentData.platform) || "";
+    var android = /android/i.test(ua) || /android/i.test(platform);
+    // 아이패드는 데스크톱 사파리처럼 보이기도 해서 터치 지원으로 함께 봐요
+    var ios = /iphone|ipad|ipod/i.test(ua) || (/macintosh/i.test(ua) && navigator.maxTouchPoints > 1);
+    var mobile = /mobi/i.test(ua) || ios;
+    var note = android ? "" :
+      ios ? "LOLog는 안드로이드 전용이라 아이폰·아이패드에서는 설치할 수 없어요." :
+      mobile ? "LOLog는 안드로이드 전용이에요. 안드로이드 폰에서 이 페이지를 열어 주세요." :
+      "컴퓨터에서는 받을 수 없어요. 안드로이드 폰에서 이 페이지를 열어 주세요.";
+    document.querySelectorAll("[data-apk]").forEach(function (a) {
+      if (android) {
+        a.href = APK;
+        a.removeAttribute("aria-disabled");
+        a.removeAttribute("role");
+      } else {
+        a.setAttribute("tabindex", "-1");
+      }
+    });
+    document.querySelectorAll("[data-get-note]").forEach(function (p) { p.textContent = note; });
+    if (!android && !mobile) {
+      document.querySelectorAll("[data-qr]").forEach(function (q) { q.hidden = false; });
+    }
+  })();
+</script>
 
 </body>
 </html>
