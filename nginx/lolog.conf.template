@@ -79,6 +79,12 @@ server {
         add_header Cache-Control "no-cache";
     }
 
+    # 소개 페이지 그림(로고). site/assets/ 안의 파일만
+    location /assets/ {
+        root /usr/share/nginx/site;
+        expires 7d;
+    }
+
     location / {
         return 404;
     }

@@ -5,12 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>LOLog</title>
 <meta name="description" content="LOLog는 대화를 녹음하면 재밌는 순간을 찾아 에피소드와 4컷 만화, 쇼츠로 남겨 주는 안드로이드 앱이에요.">
+<link rel="icon" type="image/png" href="/assets/logo-mark.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
-  /* 노트 한 장: 옅은 줄 위에 앱과 같은 코랄 강조, 손글씨 메모는 볼펜 파랑. 색은 앱 LologColors에서 가져옴 */
+  /* 노트 한 장: 옅은 줄 위에 앱 메인 색(코랄) 하나로 강조. 색은 앱 LologColors에서 가져옴 */
   :root {
     --paper: #ffffff;
     --rule: #f4f5f7;
@@ -21,11 +22,6 @@
     --accent: #e8503f;
     --accent-press: #c93e2f;
     --accent-soft: #fde3dd;
-    --pen: #2b4fd8;
-    --highlight: #ffd95a;
-    --laugh: #ffb020;
-    --absurd: #c94fd8;
-    --memory: #3db39e;
     --on-accent: #ffffff;
     --font-body: "Pretendard Variable", Pretendard, -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
     --font-hand: "Nanum Pen Script", "Pretendard Variable", cursive;
@@ -41,11 +37,6 @@
       --accent: #ff6a59;
       --accent-press: #ff8476;
       --accent-soft: #3a1f1c;
-      --pen: #8ea6ff;
-      --highlight: #8a6d12;
-      --laugh: #ffc04d;
-      --absurd: #e08bec;
-      --memory: #5fd0ba;
       --on-accent: #1a0d0b;
       color-scheme: dark;
     }
@@ -66,7 +57,7 @@
     overflow-wrap: break-word;
   }
   a { color: inherit; }
-  a:focus-visible, .btn:focus-visible { outline: 3px solid var(--pen); outline-offset: 3px; }
+  a:focus-visible, .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 
   .wrap {
     max-width: 960px;
@@ -78,8 +69,11 @@
   /* 맨 위 */
   header.top { padding-block: 20px 0; }
   header.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-  .wordmark { font-weight: 800; font-size: 22px; letter-spacing: -0.02em; text-decoration: none; }
-  .wordmark b { color: var(--accent); }
+  .wordmark { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
+  .wordmark .logo-mark { width: 40px; height: auto; }
+  .wordmark .logo-word { height: 24px; width: auto; }
+  .foot-logo { display: inline-flex; align-items: center; gap: 8px; }
+  .foot-logo img { height: 18px; width: auto; }
   nav.top-nav { display: flex; gap: 18px; font-size: 14px; color: var(--muted); flex-wrap: wrap; }
   nav.top-nav a { text-decoration: none; }
   nav.top-nav a:hover { color: var(--ink); }
@@ -95,7 +89,7 @@
     font-weight: 800;
     text-wrap: balance;
   }
-  .mark { background: linear-gradient(transparent 58%, var(--highlight) 58%, var(--highlight) 92%, transparent 92%); padding: 0 2px; }
+  .mark { background: linear-gradient(transparent 58%, var(--accent-soft) 58%, var(--accent-soft) 92%, transparent 92%); padding: 0 2px; }
   .hero p.lead { margin: 0 0 28px; font-size: 18px; color: var(--muted); max-width: 32em; }
   .actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
   .btn {
@@ -134,7 +128,7 @@
   .lines li { display: grid; grid-template-columns: 52px 1fr; gap: 10px; align-items: baseline; font-size: 15px; }
   .who { font-size: 12px; font-weight: 700; color: var(--muted); }
   .episode .meta { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line); display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
-  .hand { font-family: var(--font-hand); color: var(--pen); font-size: 24px; line-height: 1.1; }
+  .hand { font-family: var(--font-hand); color: var(--accent); font-size: 24px; line-height: 1.1; }
   .episode-note { margin: 10px 0 0 6px; transform: rotate(-2deg); }
 
   /* 섹션 */
@@ -146,7 +140,7 @@
   /* 어떻게 쓰나요: 실제 순서 */
   .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 0; padding: 0; list-style: none; counter-reset: step; }
   .steps li { counter-increment: step; padding: 20px; border-radius: 16px; background: var(--canvas); min-width: 0; }
-  .steps li::before { content: counter(step); display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--ink); color: var(--paper); font-weight: 800; font-size: 14px; margin-bottom: 10px; }
+  .steps li::before { content: counter(step); display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: var(--on-accent); font-weight: 800; font-size: 14px; margin-bottom: 10px; }
   .steps h3 { margin: 0 0 6px; font-size: 17px; }
   .steps p { margin: 0; font-size: 15px; color: var(--muted); }
 
@@ -163,9 +157,7 @@
 
   .kinds { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
   .kind { font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 999px; border: 1.5px solid currentColor; }
-  .kind.laugh { color: var(--laugh); }
-  .kind.absurd { color: var(--absurd); }
-  .kind.memory { color: var(--memory); }
+  .kind { color: var(--accent); }
 
   /* 녹음과 개인정보 */
   .privacy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -231,7 +223,7 @@
 
 <header class="top">
   <div class="wrap">
-    <a class="wordmark" href="/"><b>LO</b>Log</a>
+    <a class="wordmark" href="/"><img class="logo-mark" src="/assets/logo-mark.png" alt=""><img class="logo-word" src="/assets/logo-word.png" alt="LOLog"></a>
     <nav class="top-nav" aria-label="페이지 안 이동">
       <a href="#how">쓰는 법</a>
       <a href="#menus">메뉴별 기능</a>
@@ -354,7 +346,7 @@
           </ul>
         </div>
       </div>
-      <p class="hand tab-note">홈에서 녹음 → 에피소드 확인 → 컨텐츠에서 4컷 만화·쇼츠로!</p>
+      <p class="hand tab-note">홈에서 녹음 → 에피소드 확인 → 4컷 만화·쇼츠로!</p>
     </div>
   </section>
 
@@ -441,7 +433,7 @@
 
 <footer>
   <div class="wrap">
-    <span>LOLog · 2026</span>
+    <span class="foot-logo"><img src="/assets/logo-mark.png" alt=""><img src="/assets/logo-word.png" alt="LOLog"> · 2026</span>
     <a href="https://github.com/LOLog-2026/LOLog-app/releases">버전 기록</a>
   </div>
 </footer>
