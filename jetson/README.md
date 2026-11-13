@@ -108,6 +108,7 @@ sudo ufw enable
 - 모델을 바꿀 때는 `llm.env`의 `LLM_MODEL_PATH`만 고치고 `sudo systemctl restart lolog-llm`
 - `--cache-ram 0`: llama.cpp의 RAM 프롬프트 캐시(기본 8GB)를 끈다. 켜 두면 젯슨 메모리를 넘겨 스왑을 7GB까지 쓴다
 - `--reasoning-budget 0`, `enable_thinking=false`: Qwen3.5의 생각 모드를 끈다. 생각 모드가 없는 모델에는 영향이 없다
+- `--spec-type ngram-simple --spec-ngram-simple-size-n 3 --spec-ngram-simple-size-m 12`: n-gram 추측 디코딩. 젯슨 출력 10.7 → 20.1토큰/초(화자 나누기, LOLog-ai 실험 G절). 품질·메모리 영향 없음
 - 모델: Qwen3.5-4B Q4_K_M(2026-11-13부터). 젯슨 1호에서 후보 8개를 비교해 정함(LOLog-ai `experiments/261110-detect-eval` I절). 전 모델은 Qwen3-4B-Instruct-2507 Q4_K_M
 
 ### 모델 바꾸기 (1호, 이미 설치된 기기)
