@@ -1,5 +1,7 @@
 # LLM 서버 (llama.cpp llama-server, OpenAI 호환 /v1). 1호 젯슨만.
 # 2호 젯슨의 만화 워커도 콘티를 만들 때 이 서버를 부르므로 LAN 주소에 열고 API 키를 건다.
+# --cache-ram 0: llama.cpp의 RAM 프롬프트 캐시(기본 8GB)가 젯슨 메모리(7.3GB)를 넘겨 스왑을 7GB까지 씀
+# --reasoning-budget 0, enable_thinking=false: Qwen3.5의 생각(thinking) 모드를 끔. 켜면 출력이 몇 배로 늘어 느려짐
 [Unit]
 Description=LOLog LLM server (llama.cpp)
 Wants=network-online.target
@@ -11,7 +13,8 @@ EnvironmentFile=/etc/lolog/llm.env
 ExecStart=/opt/lolog/llama.cpp/build/bin/llama-server \
   -m ${LLM_MODEL_PATH} --alias ${LLM_ALIAS} \
   --host ${LLM_HOST} --port 8000 --api-key ${LLM_API_KEY} \
-  -c ${LLM_CTX} -np 1 -ngl 99 -fa on -ctk q8_0 -ctv q8_0 --jinja
+  -c ${LLM_CTX} -np 1 -ngl 99 -fa on -ctk q8_0 -ctv q8_0 --jinja \
+  --cache-ram 0 --reasoning-budget 0 --chat-template-kwargs '{"enable_thinking":false}'
 Restart=always
 RestartSec=10
 
