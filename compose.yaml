@@ -28,6 +28,8 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/lolog.conf.template:/etc/nginx/templates/default.conf.template:ro
+      # 서비스 소개 페이지(/)
+      - ./site:/usr/share/nginx/site:ro
     # S3_ENDPOINT에 host.docker.internal을 쓰면 서버(호스트)를 가리키게 한다(Linux Docker는 따로 적어야 한다).
     extra_hosts:
       - "host.docker.internal:host-gateway"

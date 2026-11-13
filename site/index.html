@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LOLog</title>
+<meta name="description" content="LOLog는 대화를 녹음하면 재밌는 순간을 찾아 에피소드와 4컷 만화, 쇼츠로 남겨 주는 안드로이드 앱이에요.">
+<link rel="icon" type="image/png" href="/assets/logo-mark.png?v=429d7b5a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+  /* 노트 한 장: 옅은 줄 위에 앱 메인 색(코랄) 하나로 강조. 색은 앱 LologColors에서 가져옴 */
+  :root {
+    --paper: #ffffff;
+    --rule: #f4f5f7;
+    --ink: #191f28;
+    --muted: #6b7684;
+    --line: #e5e8eb;
+    --canvas: #f2f4f6;
+    --accent: #e8503f;
+    --accent-press: #c93e2f;
+    --accent-soft: #fde3dd;
+    --on-accent: #ffffff;
+    --font-body: "Pretendard Variable", Pretendard, -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+    --font-hand: "Nanum Pen Script", "Pretendard Variable", cursive;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #15181d;
+      --rule: #1c2027;
+      --ink: #eef0f3;
+      --muted: #9aa4b1;
+      --line: #2a3039;
+      --canvas: #1e232b;
+      --accent: #ff6a59;
+      --accent-press: #ff8476;
+      --accent-soft: #3a1f1c;
+      --on-accent: #1a0d0b;
+      color-scheme: dark;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background-color: var(--paper);
+    background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 31px, var(--rule) 31px, var(--rule) 32px);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.7;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+  a { color: inherit; }
+  a:focus-visible, .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+
+  .wrap {
+    max-width: 960px;
+    margin: 0 auto;
+    padding-left: max(20px, env(safe-area-inset-left, 0px));
+    padding-right: max(20px, env(safe-area-inset-right, 0px));
+  }
+
+  /* 맨 위 */
+  /* 맨 위 틀은 스크롤해도 화면 위에 붙어 따라와요 */
+  header.top {
+    position: sticky;
+    top: env(safe-area-inset-top, 0px);
+    z-index: 20;
+    padding-block: 12px;
+    background: var(--paper);
+    border-bottom: 1px solid var(--line);
+  }
+  body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 21; background: var(--paper); }
+  /* 바로가기로 옮겨 갈 때 제목이 맨 위 틀에 가리지 않게 */
+  section { scroll-margin-top: 80px; }
+  html { scroll-behavior: smooth; }
+  header.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .wordmark { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
+  .wordmark .logo-mark { width: 40px; height: auto; }
+  .wordmark .logo-word { height: 24px; width: auto; }
+  .foot-logo { display: inline-flex; align-items: center; gap: 8px; }
+  .foot-logo img { height: 18px; width: auto; }
+  nav.top-nav { display: flex; gap: 18px; font-size: 14px; color: var(--muted); flex-wrap: wrap; }
+  nav.top-nav a { text-decoration: none; }
+  nav.top-nav a:hover { color: var(--ink); }
+
+  /* 첫 화면 */
+  .hero { padding-block: 56px 48px; }
+  .hero .wrap { display: grid; grid-template-columns: 1.1fr 1fr; gap: 32px; align-items: center; }
+  .hero h1 {
+    margin: 0 0 16px;
+    font-size: clamp(34px, 6vw, 54px);
+    line-height: 1.22;
+    letter-spacing: -0.035em;
+    font-weight: 800;
+    text-wrap: balance;
+  }
+  /* 첫 화면 문구: 세 줄을 계단처럼 밀고, 가운데 줄은 손글씨로 크게 */
+  .headline { display: flex; flex-direction: column; gap: 2px; }
+  .headline > span { display: block; }
+  .hl-2 { margin-left: 1.1em; }
+  .hl-3 { margin-left: 2.4em; position: relative; width: fit-content; }
+  .hl-pen {
+    position: relative; display: inline-block;
+    font-family: var(--font-hand); font-weight: 400;
+    color: var(--accent); font-size: 1.32em; line-height: 1;
+    /* 손글씨체는 굵기가 하나뿐이라 글자 테두리를 같은 색으로 그어 굵게 보여요 */
+    -webkit-text-stroke: 0.045em currentColor;
+    paint-order: stroke fill;
+    transform: rotate(-3deg); transform-origin: left bottom;
+    margin-right: 0.08em;
+  }
+  .squiggle { position: absolute; left: 0; right: 0; bottom: -0.12em; width: 100%; height: 0.32em; overflow: visible; }
+  .squiggle path { fill: none; stroke: var(--accent); stroke-width: 3.5; stroke-linecap: round; opacity: .55; }
+  .pop { position: absolute; right: -0.9em; top: -0.35em; font-size: 0.55em; color: var(--accent); transform: rotate(12deg); }
+  @media (prefers-reduced-motion: no-preference) {
+    .squiggle path { stroke-dasharray: 260; stroke-dashoffset: 260; animation: draw 0.9s 0.3s ease-out forwards; }
+    @keyframes draw { to { stroke-dashoffset: 0; } }
+  }
+  .mark { background: linear-gradient(transparent 58%, var(--accent-soft) 58%, var(--accent-soft) 92%, transparent 92%); padding: 0 2px; }
+  .hero p.lead { margin: 0 0 28px; font-size: 18px; color: var(--muted); max-width: 32em; }
+  .actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 14px 22px; border-radius: 999px;
+    font-weight: 700; font-size: 16px; text-decoration: none;
+    background: var(--accent); color: var(--on-accent);
+    transition: background-color .15s ease;
+  }
+  .btn:hover { background: var(--accent-press); }
+  .btn svg { width: 20px; height: 20px; flex: none; }
+  .btn.ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--line); }
+  .btn.ghost:hover { background: var(--canvas); }
+  .fine { margin: 14px 0 0; font-size: 13px; color: var(--muted); }
+  /* 안드로이드가 아니면 받기 버튼을 끄고 이유를 보여 줘요 */
+  .btn[aria-disabled="true"] { background: var(--canvas); color: var(--muted); cursor: not-allowed; pointer-events: none; }
+  .get-note { margin: 12px 0 0; font-size: 14px; color: var(--ink); font-weight: 600; }
+  .get-note:empty { display: none; }
+  .qr { display: flex; align-items: center; gap: 14px; margin-top: 16px; }
+  .qr .code { background: #ffffff; border-radius: 14px; padding: 6px; line-height: 0; border: 1.5px solid var(--line); flex: none; }
+  .qr p { margin: 0; font-size: 14px; color: var(--muted); max-width: 16em; }
+
+  /* 에피소드 한 장(앱의 에피소드 모양) */
+  .episode {
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+    border-radius: 20px;
+    padding: 22px 22px 18px;
+    box-shadow: 0 14px 40px -24px rgba(25, 31, 40, .35);
+    min-width: 0;
+  }
+  /* 에피소드 여러 장이 겹쳐 쌓인 모양: 같은 칸에 겹쳐 놓고 뒤 장은 기울여 삐져나오게 */
+  .deck { display: grid; padding: 54px 18px 0 18px; min-width: 0; align-self: start; }
+  .deck > .episode { grid-area: 1 / 1; align-self: start; transition: transform .35s ease; }
+  .deck .front { position: relative; z-index: 3; transform: rotate(1.5deg) translate(6px, 14px); }
+  .deck .back-1 { z-index: 2; transform: rotate(7deg) translate(30px, -34px); box-shadow: 0 10px 30px -22px rgba(25, 31, 40, .3); }
+  .deck .back-2 { z-index: 1; transform: rotate(-7deg) translate(-24px, -44px); box-shadow: 0 10px 30px -22px rgba(25, 31, 40, .25); }
+  .deck .back h3, .deck .back .lines { opacity: .55; }
+  .deck:hover .back-1 { transform: rotate(10deg) translate(44px, -42px); }
+  .deck:hover .back-2 { transform: rotate(-10deg) translate(-38px, -54px); }
+  .episode .chip { display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); letter-spacing: .02em; }
+  .episode h3 { margin: 10px 0 14px; font-size: 18px; letter-spacing: -0.02em; }
+  .lines { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+  .lines li { display: grid; grid-template-columns: 52px 1fr; gap: 10px; align-items: baseline; font-size: 15px; }
+  .who { font-size: 12px; font-weight: 700; color: var(--muted); }
+  .episode .meta { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line); display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .hand { font-family: var(--font-hand); color: var(--accent); font-size: 24px; line-height: 1.1; }
+  .episode-note { margin: 10px 0 0 6px; transform: rotate(-2deg); }
+
+  /* 섹션 */
+  section { padding-block: 48px; }
+  .eyebrow { font-size: 13px; font-weight: 700; color: var(--accent); letter-spacing: .06em; margin: 0 0 6px; }
+  h2 { margin: 0 0 12px; font-size: clamp(26px, 4vw, 34px); letter-spacing: -0.03em; line-height: 1.3; text-wrap: balance; }
+  .section-lead { margin: 0 0 32px; color: var(--muted); max-width: 40em; }
+  /* 설명 문장이 없는 칸은 제목 아래 여백을 같은 만큼 */
+  h2 + .tabs-strip { margin-top: 28px; }
+
+  /* 어떻게 쓰나요: 실제 순서 */
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 0; padding: 0; list-style: none; counter-reset: step; }
+  .steps li { counter-increment: step; padding: 20px; border-radius: 16px; background: var(--canvas); min-width: 0; }
+  .steps li::before { content: counter(step); display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: var(--on-accent); font-weight: 800; font-size: 14px; margin-bottom: 10px; }
+  .steps h3 { margin: 0 0 6px; font-size: 17px; }
+  .steps p { margin: 0; font-size: 15px; color: var(--muted); }
+
+  /* 메뉴별 기능: 앱 아래 탭 순서 */
+  .tabs-strip { display: grid; grid-template-columns: repeat(5, 1fr); border: 1.5px solid var(--line); border-radius: 18px; overflow: hidden; background: var(--paper); }
+  .tab { padding: 20px 18px; border-right: 1px solid var(--line); min-width: 0; }
+  .tab:last-child { border-right: 0; }
+  .tab.home { background: var(--accent-soft); }
+  .tab .name { font-weight: 800; font-size: 17px; margin: 0 0 2px; }
+  .tab .where { font-size: 12px; color: var(--muted); margin: 0 0 10px; }
+  .tab ul { margin: 0; padding-left: 16px; font-size: 14px; line-height: 1.6; }
+  .tab li + li { margin-top: 4px; }
+  .tab-note { margin: 14px 0 0; }
+
+  .kinds { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .kind { font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 999px; border: 1.5px solid currentColor; }
+  .kind { color: var(--accent); }
+
+  /* 녹음과 개인정보 */
+  .privacy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .panel { border: 1.5px solid var(--line); border-radius: 18px; padding: 22px; background: var(--paper); min-width: 0; }
+  .panel h3 { margin: 0 0 10px; font-size: 18px; letter-spacing: -0.02em; }
+  .panel p, .panel li { font-size: 15px; }
+  .panel p { margin: 0 0 10px; }
+  .panel ul { margin: 0; padding-left: 18px; }
+  .panel li + li { margin-top: 6px; }
+  .panel.consent { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 300px; gap: 24px; align-items: center; background: var(--canvas); border-color: transparent; }
+
+  /* 앱의 녹음 동의 창 모양 */
+  .dialog { background: var(--paper); border-radius: 22px; padding: 20px 20px 16px; box-shadow: 0 10px 30px -18px rgba(25, 31, 40, .45); }
+  .dialog .t { font-weight: 800; font-size: 17px; margin: 0 0 8px; }
+  .dialog .b { font-size: 13px; color: var(--muted); line-height: 1.6; margin: 0 0 16px; }
+  .dialog .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .dialog span { text-align: center; padding: 10px 0; border-radius: 999px; font-weight: 700; font-size: 14px; }
+  .dialog .no { border: 1.5px solid var(--line); }
+  .dialog .yes { background: var(--accent); color: var(--on-accent); }
+
+  .table-wrap { overflow-x: auto; margin-top: 16px; border: 1.5px solid var(--line); border-radius: 16px; background: var(--paper); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 560px; }
+  th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 12px; color: var(--muted); font-weight: 700; letter-spacing: .04em; background: var(--canvas); }
+  tr:last-child td { border-bottom: 0; }
+  td:first-child { font-weight: 700; white-space: nowrap; }
+
+  /* 받기 */
+  .get { border-top: 1.5px solid var(--line); }
+  .get .wrap { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .get h2 { margin: 0 0 6px; }
+  .get p { margin: 0; color: var(--muted); max-width: 36em; }
+
+  footer { padding-block: 28px 40px; font-size: 13px; color: var(--muted); }
+  footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+
+  @media (max-width: 860px) {
+    .tabs-strip { grid-template-columns: 1fr 1fr; }
+    .tab { border-right: 0; border-bottom: 1px solid var(--line); }
+    .tab:nth-child(odd) { border-right: 1px solid var(--line); }
+    .tab.home { grid-column: 1 / -1; order: -1; border-right: 0; }
+  }
+  @media (max-width: 720px) {
+    /* 폰처럼 좁은 화면에서는 기기와 상관없이 QR 코드를 숨겨요 */
+    .qr { display: none !important; }
+    .hero { padding-block: 32px 24px; }
+    .hero .wrap, .privacy-grid, .panel.consent { grid-template-columns: 1fr; }
+    .steps { grid-template-columns: 1fr; }
+    .deck { padding: 28px 16px 8px 18px; }
+    .deck .front { transform: rotate(1deg) translate(0, 12px); }
+    .deck .back-1 { transform: rotate(4deg) translate(12px, -10px); }
+    .deck .back-2 { transform: rotate(-4deg) translate(-12px, -16px); }
+    section { padding-block: 36px; }
+  }
+  @media (max-width: 460px) {
+    .tabs-strip { grid-template-columns: 1fr; }
+    .tab:nth-child(odd) { border-right: 0; }
+    /* 폰: 로고 아래 줄에 바로가기를 두고, 넘치면 옆으로 밀어요 */
+    header.top .wrap { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .wordmark .logo-mark { width: 32px; }
+    .wordmark .logo-word { height: 20px; }
+    nav.top-nav { width: 100%; flex-wrap: nowrap; overflow-x: auto; gap: 16px; font-size: 13px; scrollbar-width: none; }
+    nav.top-nav a { white-space: nowrap; }
+    section { scroll-margin-top: 100px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="wordmark" href="/"><img class="logo-mark" src="/assets/logo-mark.png?v=429d7b5a" alt=""><img class="logo-word" src="/assets/logo-word.png?v=966729bd" alt="LOLog"></a>
+    <nav class="top-nav" aria-label="페이지 안 이동">
+      <a href="#how">쓰는 법</a>
+      <a href="#menus">메뉴별 기능</a>
+      <a href="#privacy">녹음과 개인정보</a>
+      <a href="#download">앱 받기</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="hero">
+    <div class="wrap">
+      <div>
+        <h1 class="headline">
+          <span class="hl-1">흘러간 일상 속</span>
+          <span class="hl-2"><span class="hl-pen">재밌는 순간<svg class="squiggle" viewBox="0 0 220 18" preserveAspectRatio="none" aria-hidden="true"><path d="M3 12 C 30 3, 52 17, 80 9 S 130 3, 158 10 S 200 15, 217 6"/></svg></span>을</span>
+          <span class="hl-3">다시 꺼내 봐요<span class="pop" aria-hidden="true">✦</span></span>
+        </h1>
+        <p class="lead">대화를 녹음해 두면 LOLog가 재밌는 이야기를 찾아 에피소드로 정리해요. 마음에 드는 에피소드는 4컷 만화와 쇼츠로 만들어 친구와 나눌 수 있어요.</p>
+        <div class="actions">
+          <a class="btn" data-apk aria-disabled="true" role="link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>
+            안드로이드 앱 받기
+          </a>
+          <a class="btn ghost" href="#privacy">녹음과 개인정보</a>
+        </div>
+        <p class="get-note" data-get-note></p>
+        <div class="qr" data-qr hidden>
+          <div class="code"><svg xmlns="http://www.w3.org/2000/svg" width="132" height="132" viewBox="0 0 116 116" role="img" aria-label="lolog.java21.net QR 코드"><path transform="scale(4)" class="qrline" stroke="#191f28" d="M2 2.5h7m4 0h4m3 0h7m-25 1h1m5 0h1m1 0h3m7 0h1m5 0h1m-25 1h1m1 0h3m1 0h1m1 0h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h3m1 0h1m-25 1h1m1 0h3m1 0h1m1 0h3m2 0h2m3 0h1m1 0h3m1 0h1m-25 1h1m1 0h3m1 0h1m2 0h1m4 0h1m1 0h1m1 0h1m1 0h3m1 0h1m-25 1h1m5 0h1m3 0h2m1 0h1m2 0h1m1 0h1m5 0h1m-25 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-17 1h3m1 0h1m-13 1h1m5 0h1m1 0h2m1 0h1m1 0h1m1 0h1m1 0h2m2 0h3m-23 1h5m2 0h2m2 0h1m2 0h1m3 0h5m-23 1h1m1 0h1m1 0h6m4 0h1m1 0h1m3 0h1m1 0h2m-22 1h3m3 0h1m2 0h1m1 0h2m1 0h1m1 0h3m2 0h1m-24 1h2m2 0h3m1 0h4m1 0h1m1 0h1m1 0h2m4 0h1m-25 1h2m1 0h2m4 0h1m2 0h2m1 0h2m2 0h1m3 0h1m-24 1h1m2 0h1m2 0h1m1 0h1m1 0h1m1 0h4m1 0h1m1 0h3m1 0h2m-25 1h1m3 0h1m3 0h2m2 0h1m1 0h2m2 0h2m1 0h2m1 0h1m-25 1h1m1 0h6m1 0h2m1 0h3m1 0h5m1 0h1m-15 1h3m1 0h2m2 0h1m3 0h1m-21 1h7m4 0h1m4 0h1m1 0h1m1 0h1m3 0h1m-25 1h1m5 0h1m2 0h1m1 0h1m4 0h1m3 0h1m2 0h2m-25 1h1m1 0h3m1 0h1m2 0h1m1 0h10m1 0h1m-23 1h1m1 0h3m1 0h1m2 0h4m1 0h2m1 0h2m4 0h2m-25 1h1m1 0h3m1 0h1m2 0h2m1 0h1m1 0h1m6 0h2m1 0h1m-25 1h1m5 0h1m2 0h2m3 0h1m1 0h2m1 0h2m3 0h1m-25 1h7m1 0h1m1 0h2m4 0h1m4 0h1m2 0h1"/></svg></div>
+          <p>안드로이드 폰 카메라로 찍으면 이 페이지가 열려요. 폰에서 앱을 받아 주세요.</p>
+        </div>
+        <p class="fine">안드로이드 전용 · APK 파일로 설치해요 · 구글·네이버 계정이나 이메일로 가입</p>
+      </div>
+
+      <div class="deck" aria-label="LOLog가 만든 에피소드 예시">
+      <figure class="episode back back-2" aria-hidden="true">
+        <span class="chip">추억</span>
+        <h3>졸업 사진 찍는데 다 같이 눈 감은 이야기</h3>
+        <ul class="lines">
+          <li><span class="who">화자2</span><span>하나, 둘… 셋!</span></li>
+          <li><span class="who">화자1</span><span>잠깐, 이거 다 감았잖아.</span></li>
+        </ul>
+        <div class="meta"><span>장소 · 운동장</span><span>예시 에피소드</span></div>
+      </figure>
+      <figure class="episode back back-1" aria-hidden="true">
+        <span class="chip">황당</span>
+        <h3>택배 기사님이 고양이 이름을 알던 이야기</h3>
+        <ul class="lines">
+          <li><span class="who">화자1</span><span>보리 잘 있죠? 하시는 거야.</span></li>
+          <li><span class="who">화자2</span><span>우리 집 고양이 이름을 어떻게?</span></li>
+        </ul>
+        <div class="meta"><span>장소 · 현관</span><span>예시 에피소드</span></div>
+      </figure>
+      <figure class="episode front">
+        <span class="chip">웃김</span>
+        <h3>라면 물 맞추다 냄비째 엎은 이야기</h3>
+        <ul class="lines">
+          <li><span class="who">화자1</span><span>물 계량컵 어디 갔어?</span></li>
+          <li><span class="who">화자2</span><span>그냥 눈대중으로 해, 감으로.</span></li>
+          <li><span class="who">화자1</span><span>…감이 냄비를 엎었는데?</span></li>
+        </ul>
+        <div class="meta"><span>장소 · 자취방</span><span>예시 에피소드</span></div>
+      </figure>
+      </div>
+    </div>
+  </div>
+
+  <section id="how">
+    <div class="wrap">
+      <p class="eyebrow">쓰는 법</p>
+      <h2>녹음 버튼 하나로 시작해요</h2>
+      <p class="section-lead">녹음은 최대 3시간까지 이어지고, 화면을 끄거나 다른 앱을 써도 멈추지 않아요.</p>
+      <ol class="steps">
+        <li>
+          <h3>함께 있는 사람에게 알리고 녹음</h3>
+          <p>녹음을 시작할 때마다 함께 대화하는 사람들에게 알리고 동의를 받았는지 앱이 확인해요.</p>
+        </li>
+        <li>
+          <h3>폰 안에서 글자로</h3>
+          <p>대화는 폰 안에서 바로 글자로 바뀌어요. 녹음 중 1시간마다, 그리고 녹음이 끝나면 글이 올라가요.</p>
+        </li>
+        <li>
+          <h3>재밌는 이야기만 에피소드로</h3>
+          <p>서버가 대화 글에서 이야기를 찾아 에피소드로 만들고 알림을 보내요. 이야기가 아닌 글은 바로 지워요.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="menus">
+    <div class="wrap">
+      <p class="eyebrow">메뉴별 기능</p>
+      <h2>아래 탭 다섯 개로 모든 기능을 써요</h2>
+      <div class="tabs-strip">
+        <div class="tab">
+          <p class="name">에피소드</p>
+          <p class="where">보관함</p>
+          <ul>
+            <li>녹음과 글에서 만든 에피소드 모아 보기</li>
+            <li>직접 쓴 글이나 연결한 블로그 글로 에피소드 만들기</li>
+            <li>화자 이름·대사·장소 고치기</li>
+            <li>에피소드에 담긴 순간 다시 듣기(음성 저장을 켠 녹음만)</li>
+            <li>에피소드 지우기</li>
+          </ul>
+          <div class="kinds"><span class="kind laugh">웃김</span><span class="kind absurd">황당</span><span class="kind memory">추억</span></div>
+        </div>
+        <div class="tab">
+          <p class="name">컨텐츠</p>
+          <p class="where">4컷 · 쇼츠</p>
+          <ul>
+            <li>에피소드로 4컷 만화 만들기(에피소드마다 3번)</li>
+            <li>에피소드로 쇼츠 영상 만들기(에피소드마다 2번)</li>
+            <li>폰에 저장, 카카오톡·인스타그램·다른 앱으로 공유</li>
+          </ul>
+        </div>
+        <div class="tab home">
+          <p class="name">홈</p>
+          <p class="where">녹음 시작</p>
+          <ul>
+            <li>녹음 시작과 끝</li>
+            <li>"음성도 저장" 켜고 끄기(기본은 끔)</li>
+            <li>알림함과 공지사항</li>
+          </ul>
+        </div>
+        <div class="tab">
+          <p class="name">친구</p>
+          <p class="where">친구와 방</p>
+          <ul>
+            <li>친구 코드로 친구 맺기, 닉네임 정하기</li>
+            <li>친구와 방을 만들어 4컷 만화 올리기, 좋아요·댓글</li>
+            <li>사진으로 내 프로필 캐릭터 만들기</li>
+            <li>차단과 글 숨기기</li>
+          </ul>
+        </div>
+        <div class="tab">
+          <p class="name">설정</p>
+          <p class="where">계정</p>
+          <ul>
+            <li>구글·네이버 계정 연결과 끊기</li>
+            <li>비밀번호 바꾸기</li>
+            <li>오류 신고·의견 보내기</li>
+            <li>로그아웃, 회원 탈퇴</li>
+          </ul>
+        </div>
+      </div>
+      <p class="hand tab-note">홈에서 녹음 → 에피소드 확인 → 4컷 만화·쇼츠로!</p>
+    </div>
+  </section>
+
+  <section id="privacy">
+    <div class="wrap">
+      <p class="eyebrow">녹음과 개인정보</p>
+      <h2>녹음한 대화를 이렇게 다뤄요</h2>
+      <p class="section-lead">대화 글과 음성은 LOLog 팀이 운영하는 서버에서만 처리하고 다른 회사로 보내지 않아요. 내 에피소드와 음성은 나만 볼 수 있어요.</p>
+
+      <div class="privacy-grid">
+        <div class="panel consent">
+          <div>
+            <h3>함께 대화하는 사람의 동의</h3>
+            <p>녹음 버튼을 누르면 녹음을 시작하기 전에 매번 아래 창이 떠요. "동의받음"을 눌러야 녹음이 시작되고, "취소"를 누르면 녹음하지 않아요.</p>
+            <p>녹음하기 전에 함께 있는 사람들에게 녹음한다고 알리고 동의를 받아 주세요.</p>
+          </div>
+          <div class="dialog" role="img" aria-label="앱의 녹음 동의 창: 녹음하기 전에 알려 주세요. 취소, 동의받음 버튼">
+            <p class="t">녹음하기 전에 알려 주세요</p>
+            <p class="b">함께 대화하는 사람들에게 녹음한다고 알리고 동의를 받아 주세요. 대화는 폰 안에서 글자로 바뀌어 서버에 올라가고, 음성은 폰 밖으로 나가지 않아요.</p>
+            <div class="row"><span class="no">취소</span><span class="yes">동의받음</span></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>대화 글</h3>
+          <ul>
+            <li>녹음은 폰 안에서 글자로 바뀌고, 서버에는 글만 올라가요.</li>
+            <li>서버는 글에서 이야기를 찾아 에피소드로 만들어요.</li>
+            <li>에피소드가 되지 않은 글은 이야기 찾기가 끝나면 바로 지워요.</li>
+            <li>에피소드는 사용자가 지울 때까지 보관해요.</li>
+          </ul>
+        </div>
+
+        <div class="panel">
+          <h3>음성</h3>
+          <ul>
+            <li>"음성도 저장"을 켠 녹음만 음성 파일이 서버에 올라가요. 기본은 꺼져 있어요.</li>
+            <li>전체 녹음 파일은 녹음이 끝난 때부터 7일 뒤 서버에서 지워요.</li>
+            <li>에피소드에 담긴 구간의 음성만 따로 남기고, 에피소드를 지우면 함께 지워요.</li>
+            <li>폰에 있던 음성 파일은 서버에 올린 뒤 지워요.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>받는 정보</th><th>언제 받나요</th><th>무엇에 쓰나요</th><th>언제 지우나요</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>이메일 주소</td><td>가입할 때, 구글·네이버로 로그인할 때(이메일 제공 동의가 필요해요)</td><td>로그인과 계정 구분</td><td>회원 탈퇴할 때</td></tr>
+            <tr><td>닉네임</td><td>직접 정할 때</td><td>친구와 방에서 나를 보여 줄 때</td><td>회원 탈퇴할 때</td></tr>
+            <tr><td>대화 글</td><td>녹음이 끝나거나 1시간이 지날 때</td><td>이야기를 찾아 에피소드 만들기</td><td>에피소드가 안 된 글은 바로, 에피소드는 지울 때</td></tr>
+            <tr><td>음성</td><td>"음성도 저장"을 켰을 때만</td><td>에피소드에서 그 순간 다시 듣기</td><td>전체 파일은 7일 뒤, 에피소드 구간은 에피소드를 지울 때</td></tr>
+            <tr><td>프로필 사진</td><td>프로필 캐릭터를 만들 때</td><td>캐릭터 그림 만들기</td><td>그림을 다 만들면 바로</td></tr>
+            <tr><td>푸시 알림 토큰</td><td>로그인할 때</td><td>에피소드·4컷 만화·쇼츠 완성 알림</td><td>로그아웃하거나 탈퇴할 때</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="fine">회원 탈퇴를 하면 에피소드, 만화, 쇼츠, 대화 글, 음성, 푸시 알림 토큰을 모두 지워요. 보낸 오류 신고와 의견만 보낸 사람 정보를 지운 채 남아요.</p>
+    </div>
+  </section>
+
+  <section id="download" class="get">
+    <div class="wrap">
+      <div>
+        <h2>LOLog 받기</h2>
+        <p>안드로이드 폰에서 버튼을 누르면 가장 최근 버전의 APK를 받아요. 설치할 때 "출처를 알 수 없는 앱" 허용이 필요할 수 있어요. 아이폰·아이패드와 컴퓨터에서는 받을 수 없어요.</p>
+      </div>
+      <div>
+        <a class="btn" data-apk aria-disabled="true" role="link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>
+          안드로이드 앱 받기
+        </a>
+        <p class="get-note" data-get-note></p>
+        <div class="qr" data-qr hidden>
+          <div class="code"><svg xmlns="http://www.w3.org/2000/svg" width="132" height="132" viewBox="0 0 116 116" role="img" aria-label="lolog.java21.net QR 코드"><path transform="scale(4)" class="qrline" stroke="#191f28" d="M2 2.5h7m4 0h4m3 0h7m-25 1h1m5 0h1m1 0h3m7 0h1m5 0h1m-25 1h1m1 0h3m1 0h1m1 0h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h3m1 0h1m-25 1h1m1 0h3m1 0h1m1 0h3m2 0h2m3 0h1m1 0h3m1 0h1m-25 1h1m1 0h3m1 0h1m2 0h1m4 0h1m1 0h1m1 0h1m1 0h3m1 0h1m-25 1h1m5 0h1m3 0h2m1 0h1m2 0h1m1 0h1m5 0h1m-25 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-17 1h3m1 0h1m-13 1h1m5 0h1m1 0h2m1 0h1m1 0h1m1 0h1m1 0h2m2 0h3m-23 1h5m2 0h2m2 0h1m2 0h1m3 0h5m-23 1h1m1 0h1m1 0h6m4 0h1m1 0h1m3 0h1m1 0h2m-22 1h3m3 0h1m2 0h1m1 0h2m1 0h1m1 0h3m2 0h1m-24 1h2m2 0h3m1 0h4m1 0h1m1 0h1m1 0h2m4 0h1m-25 1h2m1 0h2m4 0h1m2 0h2m1 0h2m2 0h1m3 0h1m-24 1h1m2 0h1m2 0h1m1 0h1m1 0h1m1 0h4m1 0h1m1 0h3m1 0h2m-25 1h1m3 0h1m3 0h2m2 0h1m1 0h2m2 0h2m1 0h2m1 0h1m-25 1h1m1 0h6m1 0h2m1 0h3m1 0h5m1 0h1m-15 1h3m1 0h2m2 0h1m3 0h1m-21 1h7m4 0h1m4 0h1m1 0h1m1 0h1m3 0h1m-25 1h1m5 0h1m2 0h1m1 0h1m4 0h1m3 0h1m2 0h2m-25 1h1m1 0h3m1 0h1m2 0h1m1 0h10m1 0h1m-23 1h1m1 0h3m1 0h1m2 0h4m1 0h2m1 0h2m4 0h2m-25 1h1m1 0h3m1 0h1m2 0h2m1 0h1m1 0h1m6 0h2m1 0h1m-25 1h1m5 0h1m2 0h2m3 0h1m1 0h2m1 0h2m3 0h1m-25 1h7m1 0h1m1 0h2m4 0h1m4 0h1m2 0h1"/></svg></div>
+          <p>안드로이드 폰 카메라로 찍으면 이 페이지가 열려요. 폰에서 앱을 받아 주세요.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span class="foot-logo"><img src="/assets/logo-mark.png?v=429d7b5a" alt=""><img src="/assets/logo-word.png?v=966729bd" alt="LOLog"> · 2026</span>
+    <a href="https://github.com/LOLog-2026/LOLog-app/releases">버전 기록</a>
+  </div>
+</footer>
+
+<script>
+  // 안드로이드 기기에서만 받기 버튼을 켜요. 아이폰·아이패드·컴퓨터는 버튼을 끄고 이유를 보여 줘요.
+  (function () {
+    var APK = "https://github.com/LOLog-2026/LOLog-app/releases/latest/download/lolog.apk";
+    var ua = navigator.userAgent || "";
+    var platform = (navigator.userAgentData && navigator.userAgentData.platform) || "";
+    var android = /android/i.test(ua) || /android/i.test(platform);
+    // 아이패드는 데스크톱 사파리처럼 보이기도 해서 터치 지원으로 함께 봐요
+    var ios = /iphone|ipad|ipod/i.test(ua) || (/macintosh/i.test(ua) && navigator.maxTouchPoints > 1);
+    var mobile = /mobi/i.test(ua) || ios;
+    var note = android ? "" :
+      ios ? "LOLog는 안드로이드 전용이라 아이폰·아이패드에서는 설치할 수 없어요." :
+      mobile ? "LOLog는 안드로이드 전용이에요. 안드로이드 폰에서 이 페이지를 열어 주세요." :
+      "컴퓨터에서는 받을 수 없어요. 안드로이드 폰에서 이 페이지를 열어 주세요.";
+    document.querySelectorAll("[data-apk]").forEach(function (a) {
+      if (android) {
+        a.href = APK;
+        a.removeAttribute("aria-disabled");
+        a.removeAttribute("role");
+      } else {
+        a.setAttribute("tabindex", "-1");
+      }
+    });
+    document.querySelectorAll("[data-get-note]").forEach(function (p) { p.textContent = note; });
+    if (!android && !mobile) {
+      document.querySelectorAll("[data-qr]").forEach(function (q) { q.hidden = false; });
+    }
+  })();
+</script>
+
+</body>
+</html>
