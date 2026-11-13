@@ -79,10 +79,11 @@ server {
         add_header Cache-Control "no-cache";
     }
 
-    # 소개 페이지 그림(로고). site/assets/ 안의 파일만
+    # 소개 페이지 그림(로고). site/assets/ 안의 파일만.
+    # 그림을 바꾸면 index.html의 ?v= 값을 바꿔 브라우저가 새로 받게 한다
     location /assets/ {
         root /usr/share/nginx/site;
-        expires 7d;
+        expires 1d;
     }
 
     location / {
