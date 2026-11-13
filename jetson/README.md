@@ -10,7 +10,7 @@
 
 | | 1호 `jetson-1` | 2호 `jetson-2` |
 |---|---|---|
-| 모델 | LLM (Qwen3-4B-Instruct-2507 Q4_K_M, llama.cpp) | FLUX.2 klein 4B nf4 + LoRA |
+| 모델 | LLM (Qwen3.5-4B Q4_K_M, llama.cpp) | FLUX.2 klein 4B nf4 + LoRA |
 | 워커 | `lolog-worker@detect` (스트림 `lolog:detect`) | `lolog-worker@comic` (스트림 `lolog:comic`) |
 | 서비스 | `lolog-tunnel`, `lolog-llm`, `lolog-worker@detect` | `lolog-tunnel`, `lolog-worker@comic` |
 | LLM 부르는 곳 | 1호 Tailscale 주소 `100.98.23.5:8000` | 같은 주소 (콘티 만들 때) |
@@ -89,8 +89,8 @@ sudo -u lolog cmake --build build -j4 --target llama-server      # 20~40분
 sudo -u lolog mkdir -p /opt/lolog/models
 # 받기 전에 Hugging Face에서 저장소·파일 이름 확인
 sudo -u lolog /opt/lolog/venv/bin/pip install -U "huggingface_hub[cli]"
-sudo -u lolog /opt/lolog/venv/bin/hf download unsloth/Qwen3-4B-Instruct-2507-GGUF \
-  Qwen3-4B-Instruct-2507-Q4_K_M.gguf --local-dir /opt/lolog/models
+sudo -u lolog /opt/lolog/venv/bin/hf download unsloth/Qwen3.5-4B-GGUF \
+  Qwen3.5-4B-Q4_K_M.gguf --local-dir /opt/lolog/models
 
 sudo cp llm.env.example /etc/lolog/llm.env && sudo nano /etc/lolog/llm.env   # LAN 주소, API 키
 
@@ -106,6 +106,21 @@ sudo ufw enable
 - `-c 24576`: 1시간 묶음(약 1.5만 토큰 추정) + 지시문 + 출력
 - `-ctk/-ctv q8_0`: KV 캐시를 8비트로 저장해 문맥 메모리를 반으로
 - 모델을 바꿀 때는 `llm.env`의 `LLM_MODEL_PATH`만 고치고 `sudo systemctl restart lolog-llm`
+- `--cache-ram 0`: llama.cpp의 RAM 프롬프트 캐시(기본 8GB)를 끈다. 켜 두면 젯슨 메모리를 넘겨 스왑을 7GB까지 쓴다
+- `--reasoning-budget 0`, `enable_thinking=false`: Qwen3.5의 생각 모드를 끈다. 생각 모드가 없는 모델에는 영향이 없다
+- `--spec-type ngram-simple --spec-ngram-simple-size-n 3 --spec-ngram-simple-size-m 12`: n-gram 추측 디코딩. 젯슨 출력 10.7 → 20.1토큰/초(화자 나누기, LOLog-ai 실험 G절). 품질·메모리 영향 없음
+- 모델: Qwen3.5-4B Q4_K_M(2026-11-13부터). 젯슨 1호에서 후보 8개를 비교해 정함(LOLog-ai `experiments/261110-detect-eval` I절). 전 모델은 Qwen3-4B-Instruct-2507 Q4_K_M
+
+### 모델 바꾸기 (1호, 이미 설치된 기기)
+
+```bash
+# LOLog-infra 레포 폴더에서
+sudo -u lolog /opt/lolog/venv/bin/hf download unsloth/Qwen3.5-4B-GGUF Qwen3.5-4B-Q4_K_M.gguf --local-dir /opt/lolog/models
+sudo cp jetson/systemd/lolog-llm.service /etc/systemd/system/ && sudo systemctl daemon-reload
+sudo sed -i 's#^LLM_MODEL_PATH=.*#LLM_MODEL_PATH=/opt/lolog/models/Qwen3.5-4B-Q4_K_M.gguf#; s#^LLM_ALIAS=.*#LLM_ALIAS=qwen3.5-4b-q4#' /etc/lolog/llm.env
+sudo systemctl restart lolog-llm && sleep 60 && curl -s http://$(sudo grep ^LLM_HOST /etc/lolog/llm.env | cut -d= -f2):8000/health
+```
+워커의 `LLM_MODEL`은 이름표일 뿐이라(서버가 모델 하나만 띄움) 1·2·3호 `worker.env`는 그대로 둬도 된다. 되돌릴 때는 `LLM_MODEL_PATH`만 전 모델로 바꾸고 다시 시작한다.
 
 ## 3. 워커
 

@@ -2,7 +2,7 @@
 
 첫 실행은 nf4 모델을 저장하느라 몇 분 더 걸린다. 두 번째 실행 시간이 실제 시간.
 사용(2호): sudo -u lolog env PYTHONPATH=/opt/lolog/LOLog-ai/src HF_HOME=/opt/lolog/hf-cache \
-  HF_HUB_OFFLINE=1 LLM_BASE_URL=http://100.98.23.5:8000/v1 LLM_API_KEY=<키> LLM_MODEL=qwen3-4b-q4 \
+  HF_HUB_OFFLINE=1 LLM_BASE_URL=http://100.98.23.5:8000/v1 LLM_API_KEY=<키> LLM_MODEL=qwen3.5-4b-q4 \
   /opt/lolog/venv/bin/python comic_dryrun.py /opt/lolog/dryrun
 """
 import json

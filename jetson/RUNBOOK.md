@@ -50,7 +50,7 @@ journalctl -u lolog-llm -f            # "offloaded 37/37 layers to GPU", "listen
 ```bash
 curl -s http://100.98.23.5:8000/health                        # {"status":"ok"}
 curl -s http://100.98.23.5:8000/v1/models | head -c 200        # 키 없이: 401이 나와야 정상
-curl -s -H "Authorization: Bearer $KEY" http://100.98.23.5:8000/v1/models | head -c 200   # qwen3-4b-q4 보임
+curl -s -H "Authorization: Bearer $KEY" http://100.98.23.5:8000/v1/models | head -c 200   # qwen3.5-4b-q4 보임
 ```
 
 메모리를 아끼려고 데스크톱을 아직 안 껐다면 지금 끈다.
