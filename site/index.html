@@ -140,6 +140,20 @@
   .fine { margin: 14px 0 0; font-size: 13px; color: var(--muted); }
   /* 안드로이드가 아니면 받기 버튼을 끄고 이유를 보여 줘요 */
   .btn[aria-disabled="true"] { background: var(--canvas); color: var(--muted); cursor: not-allowed; pointer-events: none; }
+  .version { margin: 12px 0 0; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .version b { color: var(--accent); font-weight: 700; }
+  /* 업데이트 기록: 버전마다 왼쪽 세로줄에 점 하나 */
+  .releases { list-style: none; margin: 28px 0 0; padding: 0 0 0 22px; border-left: 2px solid var(--line); display: grid; gap: 26px; max-width: 44em; }
+  .release { position: relative; }
+  .release::before { content: ""; position: absolute; left: -29px; top: 7px; width: 12px; height: 12px; border-radius: 50%; background: var(--paper); border: 2px solid var(--line); }
+  .release.latest::before { background: var(--accent); border-color: var(--accent); }
+  .release-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .release-ver { font-weight: 800; font-size: 18px; letter-spacing: -0.01em; }
+  .release-date { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .release-new { font-size: 11px; font-weight: 700; color: var(--accent); background: var(--accent-soft); padding: 2px 8px; border-radius: 999px; }
+  .release ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; }
+  .release li + li { margin-top: 4px; }
+  .release-empty { color: var(--muted); font-size: 15px; }
   .get-note { margin: 12px 0 0; font-size: 14px; color: var(--ink); font-weight: 600; }
   .get-note:empty { display: none; }
   .qr { display: flex; align-items: center; gap: 14px; margin-top: 16px; }
@@ -284,6 +298,7 @@
       <a href="#how">쓰는 법</a>
       <a href="#menus">메뉴별 기능</a>
       <a href="#privacy">녹음과 개인정보</a>
+      <a href="#updates">업데이트 기록</a>
       <a href="#download">앱 받기</a>
     </nav>
   </div>
@@ -306,6 +321,7 @@
           </a>
           <a class="btn ghost" href="#privacy">녹음과 개인정보</a>
         </div>
+        <p class="version" data-version hidden></p>
         <p class="get-note" data-get-note></p>
         <div class="qr" data-qr hidden>
           <div class="code"><svg xmlns="http://www.w3.org/2000/svg" width="132" height="132" viewBox="0 0 116 116" role="img" aria-label="lolog.java21.net QR 코드"><path transform="scale(4)" class="qrline" stroke="#191f28" d="M2 2.5h7m4 0h4m3 0h7m-25 1h1m5 0h1m1 0h3m7 0h1m5 0h1m-25 1h1m1 0h3m1 0h1m1 0h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h3m1 0h1m-25 1h1m1 0h3m1 0h1m1 0h3m2 0h2m3 0h1m1 0h3m1 0h1m-25 1h1m1 0h3m1 0h1m2 0h1m4 0h1m1 0h1m1 0h1m1 0h3m1 0h1m-25 1h1m5 0h1m3 0h2m1 0h1m2 0h1m1 0h1m5 0h1m-25 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-17 1h3m1 0h1m-13 1h1m5 0h1m1 0h2m1 0h1m1 0h1m1 0h1m1 0h2m2 0h3m-23 1h5m2 0h2m2 0h1m2 0h1m3 0h5m-23 1h1m1 0h1m1 0h6m4 0h1m1 0h1m3 0h1m1 0h2m-22 1h3m3 0h1m2 0h1m1 0h2m1 0h1m1 0h3m2 0h1m-24 1h2m2 0h3m1 0h4m1 0h1m1 0h1m1 0h2m4 0h1m-25 1h2m1 0h2m4 0h1m2 0h2m1 0h2m2 0h1m3 0h1m-24 1h1m2 0h1m2 0h1m1 0h1m1 0h1m1 0h4m1 0h1m1 0h3m1 0h2m-25 1h1m3 0h1m3 0h2m2 0h1m1 0h2m2 0h2m1 0h2m1 0h1m-25 1h1m1 0h6m1 0h2m1 0h3m1 0h5m1 0h1m-15 1h3m1 0h2m2 0h1m3 0h1m-21 1h7m4 0h1m4 0h1m1 0h1m1 0h1m3 0h1m-25 1h1m5 0h1m2 0h1m1 0h1m4 0h1m3 0h1m2 0h2m-25 1h1m1 0h3m1 0h1m2 0h1m1 0h10m1 0h1m-23 1h1m1 0h3m1 0h1m2 0h4m1 0h2m1 0h2m4 0h2m-25 1h1m1 0h3m1 0h1m2 0h2m1 0h1m1 0h1m6 0h2m1 0h1m-25 1h1m5 0h1m2 0h2m3 0h1m1 0h2m1 0h2m3 0h1m-25 1h7m1 0h1m1 0h2m4 0h1m4 0h1m2 0h1"/></svg></div>
@@ -489,6 +505,17 @@
     </div>
   </section>
 
+  <section id="updates">
+    <div class="wrap">
+      <p class="eyebrow">업데이트 기록</p>
+      <h2>새로 바뀐 점</h2>
+      <ol class="releases" data-releases>
+        <li class="release-empty">업데이트 기록을 불러오는 중이에요.</li>
+      </ol>
+      <p class="fine"><a href="https://github.com/LOLog-2026/LOLog-app/releases">지난 버전 모두 보기</a></p>
+    </div>
+  </section>
+
   <section id="download" class="get">
     <div class="wrap">
       <div>
@@ -500,6 +527,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>
           안드로이드 앱 받기
         </a>
+        <p class="version" data-version hidden></p>
         <p class="get-note" data-get-note></p>
         <div class="qr" data-qr hidden>
           <div class="code"><svg xmlns="http://www.w3.org/2000/svg" width="132" height="132" viewBox="0 0 116 116" role="img" aria-label="lolog.java21.net QR 코드"><path transform="scale(4)" class="qrline" stroke="#191f28" d="M2 2.5h7m4 0h4m3 0h7m-25 1h1m5 0h1m1 0h3m7 0h1m5 0h1m-25 1h1m1 0h3m1 0h1m1 0h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h3m1 0h1m-25 1h1m1 0h3m1 0h1m1 0h3m2 0h2m3 0h1m1 0h3m1 0h1m-25 1h1m1 0h3m1 0h1m2 0h1m4 0h1m1 0h1m1 0h1m1 0h3m1 0h1m-25 1h1m5 0h1m3 0h2m1 0h1m2 0h1m1 0h1m5 0h1m-25 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-17 1h3m1 0h1m-13 1h1m5 0h1m1 0h2m1 0h1m1 0h1m1 0h1m1 0h2m2 0h3m-23 1h5m2 0h2m2 0h1m2 0h1m3 0h5m-23 1h1m1 0h1m1 0h6m4 0h1m1 0h1m3 0h1m1 0h2m-22 1h3m3 0h1m2 0h1m1 0h2m1 0h1m1 0h3m2 0h1m-24 1h2m2 0h3m1 0h4m1 0h1m1 0h1m1 0h2m4 0h1m-25 1h2m1 0h2m4 0h1m2 0h2m1 0h2m2 0h1m3 0h1m-24 1h1m2 0h1m2 0h1m1 0h1m1 0h1m1 0h4m1 0h1m1 0h3m1 0h2m-25 1h1m3 0h1m3 0h2m2 0h1m1 0h2m2 0h2m1 0h2m1 0h1m-25 1h1m1 0h6m1 0h2m1 0h3m1 0h5m1 0h1m-15 1h3m1 0h2m2 0h1m3 0h1m-21 1h7m4 0h1m4 0h1m1 0h1m1 0h1m3 0h1m-25 1h1m5 0h1m2 0h1m1 0h1m4 0h1m3 0h1m2 0h2m-25 1h1m1 0h3m1 0h1m2 0h1m1 0h10m1 0h1m-23 1h1m1 0h3m1 0h1m2 0h4m1 0h2m1 0h2m4 0h2m-25 1h1m1 0h3m1 0h1m2 0h2m1 0h1m1 0h1m6 0h2m1 0h1m-25 1h1m5 0h1m2 0h2m3 0h1m1 0h2m1 0h2m3 0h1m-25 1h7m1 0h1m1 0h2m4 0h1m4 0h1m2 0h1"/></svg></div>
@@ -516,6 +544,58 @@
     <a href="https://github.com/LOLog-2026/LOLog-app/releases">버전 기록</a>
   </div>
 </footer>
+
+<script>
+  // 최신 버전과 업데이트 기록: LOLog-app GitHub 릴리스에서 읽어 와요.
+  // 릴리스 본문의 "- "로 시작하는 줄만 바뀐 점으로 보여요. 못 읽으면 링크만 남겨요.
+  (function () {
+    var list = document.querySelector("[data-releases]");
+    function fmt(iso) {
+      var d = new Date(iso);
+      return d.getFullYear() + "년 " + (d.getMonth() + 1) + "월 " + d.getDate() + "일";
+    }
+    function el(tag, cls, text) {
+      var e = document.createElement(tag);
+      if (cls) e.className = cls;
+      if (text != null) e.textContent = text;
+      return e;
+    }
+    fetch("https://api.github.com/repos/LOLog-2026/LOLog-app/releases?per_page=5", { headers: { Accept: "application/vnd.github+json" } })
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function (rels) {
+        rels = rels.filter(function (x) { return !x.draft && !x.prerelease; });
+        if (!rels.length) throw new Error("empty");
+        var latest = rels[0];
+        document.querySelectorAll("[data-version]").forEach(function (p) {
+          p.textContent = "";
+          p.appendChild(el("b", null, "최신 버전 " + latest.tag_name));
+          p.appendChild(document.createTextNode(" · " + fmt(latest.published_at) + " 업데이트"));
+          p.hidden = false;
+        });
+        list.textContent = "";
+        rels.forEach(function (x, i) {
+          var li = el("li", "release" + (i === 0 ? " latest" : ""));
+          var head = el("div", "release-head");
+          head.appendChild(el("span", "release-ver", x.tag_name));
+          head.appendChild(el("span", "release-date", fmt(x.published_at)));
+          if (i === 0) head.appendChild(el("span", "release-new", "최신"));
+          li.appendChild(head);
+          var notes = (x.body || "").split(/\r?\n/).filter(function (l) { return /^\s*[-*] /.test(l); })
+            .map(function (l) { return l.replace(/^\s*[-*] /, "").replace(/[`*_]/g, ""); });
+          if (notes.length) {
+            var ul = el("ul");
+            notes.forEach(function (n) { ul.appendChild(el("li", null, n)); });
+            li.appendChild(ul);
+          }
+          list.appendChild(li);
+        });
+      })
+      .catch(function () {
+        list.textContent = "";
+        list.appendChild(el("li", "release-empty", "지금은 업데이트 기록을 불러오지 못했어요. 아래 링크에서 볼 수 있어요."));
+      });
+  })();
+</script>
 
 <script>
   // 안드로이드 기기에서만 받기 버튼을 켜요. 아이폰·아이패드·컴퓨터는 버튼을 끄고 이유를 보여 줘요.
