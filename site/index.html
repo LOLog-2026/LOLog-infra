@@ -67,7 +67,19 @@
   }
 
   /* 맨 위 */
-  header.top { padding-block: 20px 0; }
+  /* 맨 위 틀은 스크롤해도 화면 위에 붙어 따라와요 */
+  header.top {
+    position: sticky;
+    top: env(safe-area-inset-top, 0px);
+    z-index: 20;
+    padding-block: 12px;
+    background: var(--paper);
+    border-bottom: 1px solid var(--line);
+  }
+  body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 21; background: var(--paper); }
+  /* 바로가기로 옮겨 갈 때 제목이 맨 위 틀에 가리지 않게 */
+  section { scroll-margin-top: 80px; }
+  html { scroll-behavior: smooth; }
   header.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
   .wordmark { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
   .wordmark .logo-mark { width: 40px; height: auto; }
@@ -212,7 +224,16 @@
   @media (max-width: 460px) {
     .tabs-strip { grid-template-columns: 1fr; }
     .tab:nth-child(odd) { border-right: 0; }
-    nav.top-nav { display: none; }
+    /* 폰: 로고 아래 줄에 바로가기를 두고, 넘치면 옆으로 밀어요 */
+    header.top .wrap { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .wordmark .logo-mark { width: 32px; }
+    .wordmark .logo-word { height: 20px; }
+    nav.top-nav { width: 100%; flex-wrap: nowrap; overflow-x: auto; gap: 16px; font-size: 13px; scrollbar-width: none; }
+    nav.top-nav a { white-space: nowrap; }
+    section { scroll-margin-top: 100px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
   }
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; }
