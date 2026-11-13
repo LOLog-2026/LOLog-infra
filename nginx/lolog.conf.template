@@ -71,6 +71,14 @@ server {
         proxy_pass ${S3_ENDPOINT};
     }
 
+    # 서비스 소개 페이지(네이버 로그인 검수에 등록한 서비스 URL). site/index.html 한 장만 보여 준다.
+    # 앱 받기 버튼은 LOLog-app GitHub 최신 릴리스로 가서, 새 APK는 릴리스만 올리면 된다.
+    location = / {
+        root /usr/share/nginx/site;
+        try_files /index.html =404;
+        add_header Cache-Control "no-cache";
+    }
+
     location / {
         return 404;
     }
