@@ -1,0 +1,151 @@
+# LOLog 교육기관 서버 스택(LOLog-docs deployment.md 1·3장).
+# 교육기관 서버는 여러 학생이 같이 쓴다. 80·443은 학교 Nginx가 쥐고 있어서(HTTPS도 거기서 끝난다),
+# 우리 nginx 컨테이너는 개인 포트 하나(NGINX_PORT)를 열고 학교 Nginx가 lolog.java21.net을 그 포트로 넘긴다.
+# 학교 Nginx는 컨테이너 안에서 돌아 host.docker.internal(Docker 브리지 주소)로 붙으므로 127.0.0.1이 아닌 0.0.0.0에 연다.
+# Jetson 터널용 api·Redis 포트도 개인 포트 범위 안에서 127.0.0.1에만 연다.
+# 값은 같은 폴더의 .env에서 읽는다(.env.example 참고).
+# 데이터는 볼륨에만 있고 백업하지 않는다. 볼륨을 지우는 `docker compose down -v`는 쓰지 않는다.
+name: lolog
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
+services:
+  # 경로 나누기, /internal 차단, 로그인 횟수 제한(deployment.md 2장)
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - "${NGINX_BIND:-0.0.0.0}:${NGINX_PORT:?.env에 NGINX_PORT(학교 Nginx가 넘겨 줄 개인 포트)가 필요합니다}:80"
+    environment:
+      # nginx 이미지가 뜰 때 templates/의 ${S3_ENDPOINT}, ${S3_BUCKET}을 이 값으로 바꿔 conf.d/default.conf를 만든다.
+      # nginx 변수($host 등)는 같은 이름의 환경 변수가 없어서 그대로 남는다.
+      S3_ENDPOINT: ${S3_ENDPOINT:?.env에 S3_ENDPOINT(교육기관 MinIO S3 주소)가 필요합니다}
+      S3_BUCKET: ${S3_BUCKET:?}
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/lolog.conf.template:/etc/nginx/templates/default.conf.template:ro
+    # S3_ENDPOINT에 host.docker.internal을 쓰면 서버(호스트)를 가리키게 한다(Linux Docker는 따로 적어야 한다).
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - api
+      - auth
+    logging: *logging
+
+  api:
+    image: ghcr.io/lolog-2026/lolog-api:${API_TAG:?.env에 API_TAG(이미지 태그, 커밋 SHA)가 필요합니다}
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      JWT_SECRET: ${JWT_SECRET:?}
+      INTERNAL_TOKEN: ${INTERNAL_TOKEN:?}
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}?currentSchema=${DB_SCHEMA}
+      DB_USERNAME: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?}
+      # 만화 이미지는 교육기관 MinIO에 둔다(LOLog-docs api-spec, requirements TR-06).
+      # 업로드·삭제는 S3_ENDPOINT로 직접, imageUrl은 공개 주소로 서명해 우리 nginx가 MinIO로 넘긴다.
+      S3_ENDPOINT: ${S3_ENDPOINT:?}
+      S3_PUBLIC_ENDPOINT: ${PUBLIC_URL}
+      S3_BUCKET: ${S3_BUCKET:?}
+      S3_REGION: ${S3_REGION:-us-east-1}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:?}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:?}
+      # 푸시 알림(FCM) 서비스 계정 키(deployment.md 4장). 서버의 secrets/fcm.json을 넣는다.
+      FCM_CREDENTIALS_PATH: /run/secrets/fcm.json
+    secrets:
+      - source: fcm
+        target: fcm.json
+    ports:
+      # Jetson 워커가 SSH 터널로 /internal을 부르는 길(deployment.md 3·7장). 서버 밖에서는 안 보인다.
+      - "127.0.0.1:${TUNNEL_API_PORT:?.env에 TUNNEL_API_PORT가 필요합니다}:8080"
+    # S3_ENDPOINT에 host.docker.internal을 쓰면 서버(호스트)를 가리키게 한다(Linux Docker는 따로 적어야 한다).
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    logging: *logging
+
+  auth:
+    image: ghcr.io/lolog-2026/lolog-auth:${AUTH_TAG:?.env에 AUTH_TAG(이미지 태그, 커밋 SHA)가 필요합니다}
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      JWT_SECRET: ${JWT_SECRET:?}
+      INTERNAL_TOKEN: ${INTERNAL_TOKEN:?}
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}?currentSchema=${DB_SCHEMA}
+      DB_USERNAME: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?}
+      API_INTERNAL_URL: http://api:8080
+      # 구글 로그인. 앱이 serverClientId로 쓰는 웹 클라이언트 ID라 비밀값은 아니지만 서버 .env에만 둔다.
+      # auth는 ID 토큰의 aud가 이 값인지 본다. 네이버는 서버에 넣을 키가 없다.
+      GOOGLE_WEB_CLIENT_ID: ${GOOGLE_WEB_CLIENT_ID:?.env에 GOOGLE_WEB_CLIENT_ID(구글 웹 클라이언트 ID)가 필요합니다}
+      # 가입 인증번호 메일(Gmail SMTP, STARTTLS 587). MAIL_PASSWORD는 보내는 계정의 앱 비밀번호다.
+      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:?.env에 MAIL_USERNAME(보내는 Gmail 계정)이 필요합니다}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:?.env에 MAIL_PASSWORD(Gmail 앱 비밀번호)가 필요합니다}
+      MAIL_FROM: ${MAIL_FROM:?.env에 MAIL_FROM(보내는 사람 주소)이 필요합니다}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    logging: *logging
+
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    logging: *logging
+
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    # 작업 큐(Streams)와 리프레시 토큰을 둔다. 재시작해도 남도록 AOF를 켠다.
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?}", "--appendonly", "yes"]
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?}
+    volumes:
+      - redisdata:/data
+    ports:
+      # Jetson 워커가 SSH 터널로 큐를 읽는 길(deployment.md 3·7장). 서버 밖에서는 안 보인다.
+      - "127.0.0.1:${TUNNEL_REDIS_PORT:?.env에 TUNNEL_REDIS_PORT가 필요합니다}:6379"
+    healthcheck:
+      test: ["CMD-SHELL", "REDISCLI_AUTH=\"$$REDIS_PASSWORD\" redis-cli ping | grep -q PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    logging: *logging
+
+secrets:
+  # 앱과 같은 Firebase 프로젝트의 서비스 계정 키. 레포에 올리지 않는다(.gitignore의 secrets/).
+  # 컨테이너는 root가 아닌 사용자로 돌아서 파일은 644, 폴더는 700으로 둔다(README).
+  fcm:
+    file: ./secrets/fcm.json
+
+volumes:
+  pgdata:
+  redisdata:
