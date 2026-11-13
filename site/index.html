@@ -209,6 +209,8 @@
     .tab.home { grid-column: 1 / -1; order: -1; border-right: 0; }
   }
   @media (max-width: 720px) {
+    /* 폰처럼 좁은 화면에서는 기기와 상관없이 QR 코드를 숨겨요 */
+    .qr { display: none !important; }
     .hero { padding-block: 32px 24px; }
     .hero .wrap, .privacy-grid, .panel.consent { grid-template-columns: 1fr; }
     .steps { grid-template-columns: 1fr; }
