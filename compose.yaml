@@ -61,6 +61,8 @@ services:
       S3_SECRET_KEY: ${S3_SECRET_KEY:?}
       # 푸시 알림(FCM) 서비스 계정 키(deployment.md 4장). 서버의 secrets/fcm.json을 넣는다.
       FCM_CREDENTIALS_PATH: /run/secrets/fcm.json
+      # 내 목소리(FR-CHAR-05) 큐. false면 만들기 API가 503. Jetson 3호에 voice_clone 워커를 배포한 뒤 .env에서 true로 바꾼다.
+      VOICE_CLONE_QUEUE_ENABLED: ${VOICE_CLONE_QUEUE_ENABLED:-false}
     secrets:
       - source: fcm
         target: fcm.json
