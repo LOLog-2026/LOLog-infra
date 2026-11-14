@@ -250,6 +250,9 @@
   .get p { margin: 0; color: var(--muted); max-width: 36em; }
 
   footer { padding-block: 28px 40px; font-size: 13px; color: var(--muted); }
+  footer .credits { display: block; margin-bottom: 14px; }
+  footer .credits p { margin: 0; font-size: 12px; line-height: 1.7; max-width: 60em; }
+  footer .credits b { font-weight: 700; color: var(--ink); }
   footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 
   @media (max-width: 860px) {
@@ -539,6 +542,9 @@
 </main>
 
 <footer>
+  <div class="wrap credits">
+    <p>음성 인식: <b>SenseVoice-Small</b> (FunAudioLLM / Alibaba Group, FunASR Model License 1.1) · 실행: sherpa-onnx (k2-fsa, Apache 2.0), ONNX Runtime (Microsoft, MIT) · 말소리 구간: Silero VAD (Silero Team, MIT). 그 밖의 오픈소스 라이선스는 앱의 설정 → 오픈소스 라이선스에서 볼 수 있어요.</p>
+  </div>
   <div class="wrap">
     <span class="foot-logo"><img src="/assets/logo-mark.png?v=429d7b5a" alt=""><img src="/assets/logo-word.png?v=966729bd" alt="LOLog"> · 2026</span>
     <a href="https://github.com/LOLog-2026/LOLog-app/releases">버전 기록</a>
