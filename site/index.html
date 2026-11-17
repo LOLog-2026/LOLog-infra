@@ -195,6 +195,18 @@
   /* 설명 문장이 없는 칸은 제목 아래 여백을 같은 만큼 */
   h2 + .tabs-strip { margin-top: 28px; }
 
+  /* 미리 보기 영상: 왼쪽 설명, 오른쪽 폰 모양 틀 */
+  .demo .wrap { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 48px; align-items: center; }
+  .demo-points { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+  .demo-points li { position: relative; padding-left: 22px; font-size: 15px; }
+  .demo-points li::before { content: ""; position: absolute; left: 4px; top: 0.7em; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+  .demo-phone {
+    margin: 0; width: min(300px, 100%); padding: 10px; border-radius: 36px;
+    background: var(--ink); box-shadow: 0 24px 48px -28px rgba(25, 31, 40, .55);
+  }
+  .demo-phone video { display: block; width: 100%; height: auto; aspect-ratio: 720 / 1398; border-radius: 27px; background: var(--canvas); }
+  .demo-phone figcaption { margin-top: 10px; text-align: center; font-size: 12px; color: #9aa4b1; }
+
   /* 어떻게 쓰나요: 실제 순서 */
   .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 0; padding: 0; list-style: none; counter-reset: step; }
   .steps li { counter-increment: step; padding: 20px; border-radius: 16px; background: var(--canvas); min-width: 0; }
@@ -267,6 +279,8 @@
     .hero { padding-block: 32px 24px; }
     .hero .wrap, .privacy-grid, .panel.consent { grid-template-columns: 1fr; }
     .steps { grid-template-columns: 1fr; }
+    .demo .wrap { grid-template-columns: 1fr; gap: 24px; }
+    .demo-phone { justify-self: center; width: min(280px, 100%); }
     .deck { padding: 28px 16px 8px 18px; }
     .deck .front { transform: rotate(1deg) translate(0, 12px); }
     .deck .back-1 { transform: rotate(4deg) translate(12px, -10px); }
@@ -298,6 +312,7 @@
   <div class="wrap">
     <a class="wordmark" href="/"><img class="logo-mark" src="/assets/logo-mark.png?v=429d7b5a" alt=""><img class="logo-word" src="/assets/logo-word.png?v=966729bd" alt="LOLog"></a>
     <nav class="top-nav" aria-label="페이지 안 이동">
+      <a href="#demo">미리 보기</a>
       <a href="#how">쓰는 법</a>
       <a href="#menus">메뉴별 기능</a>
       <a href="#privacy">녹음과 개인정보</a>
@@ -365,6 +380,27 @@
       </div>
     </div>
   </div>
+
+  <section id="demo" class="demo">
+    <div class="wrap">
+      <div>
+        <p class="eyebrow">미리 보기</p>
+        <h2>1분 영상으로 둘러봐요</h2>
+        <p class="section-lead">녹음한 대화가 에피소드가 되고, 4컷 만화와 쇼츠로 바뀌는 과정을 앱 화면으로 보여 드려요.</p>
+        <ul class="demo-points">
+          <li>녹음을 끝내면 재밌는 이야기가 에피소드로 정리돼요</li>
+          <li>화자마다 캐릭터를 붙이고 4컷 만화나 쇼츠로 만들어요</li>
+          <li>만든 컨텐츠는 갤러리·카카오톡으로 내보내거나 친구와 같이 쓰는 방에 올려요</li>
+        </ul>
+      </div>
+      <figure class="demo-phone">
+        <video src="/assets/demo.mp4?v=b1ad7556" poster="/assets/demo-poster.jpg?v=b6472443"
+               controls autoplay muted loop playsinline preload="metadata" width="720" height="1398"
+               aria-label="LOLog 앱 화면 시안 영상(1분)"></video>
+        <figcaption>소리는 영상의 스피커 단추로 켤 수 있어요</figcaption>
+      </figure>
+    </div>
+  </section>
 
   <section id="how">
     <div class="wrap">
