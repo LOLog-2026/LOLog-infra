@@ -122,6 +122,25 @@ sudo systemctl restart lolog-llm && sleep 60 && curl -s http://$(sudo grep ^LLM_
 ```
 워커의 `LLM_MODEL`은 이름표일 뿐이라(서버가 모델 하나만 띄움) 1·2·3호 `worker.env`는 그대로 둬도 된다. 되돌릴 때는 `LLM_MODEL_PATH`만 전 모델로 바꾸고 다시 시작한다.
 
+### API 키를 명령줄에서 빼기 (1호, 11-24 전에 설치한 기기, #38)
+
+예전 유닛은 `--api-key ${LLM_API_KEY}`로 키를 넘겨서 `ps`를 보면 1호의 누구나 키를 볼 수 있었다. 지금은 llama-server가 `llm.env`의 `LLAMA_API_KEY` 환경 변수를 직접 읽는다. 환경 변수는 lolog와 root만 볼 수 있다. 키 값은 그대로라 워커 세 대의 `worker.env`(`LLM_API_KEY`)는 안 바꾼다.
+
+```bash
+# 1호에서. LLM이 다시 뜨는 1분쯤 감지·콘티 요청이 실패하고 다시 시도되니, 작업이 없을 때 한다
+sudo sed -i 's/ --api-key \${LLM_API_KEY}//' /etc/systemd/system/lolog-llm.service
+sudo sed -i 's/^LLM_API_KEY=/LLAMA_API_KEY=/' /etc/lolog/llm.env
+sudo systemctl daemon-reload && sudo systemctl restart lolog-llm && sleep 60
+
+ps -eo args | grep [l]lama-server | grep -c -- --api-key                      # 0
+curl -s -o /dev/null -w '%{http_code}\n' http://100.98.23.5:8000/v1/models     # 401 (키 없이는 막힘)
+curl -s -o /dev/null -w '%{http_code}\n' http://100.98.23.5:8000/v1/models \
+  -H @<(printf 'Authorization: Bearer %s\n' "$(sudo sed -n 's/^LLAMA_API_KEY=//p' /etc/lolog/llm.env)")   # 200
+```
+
+- 마지막 줄은 키를 명령줄이 아니라 파일 설명자로 curl에 넘긴다
+- 되돌릴 때는 `llm.env`의 이름을 `LLM_API_KEY`로 돌리고, 유닛 `--port 8000` 뒤에 `--api-key ${LLM_API_KEY}`를 다시 넣는다
+
 ## 3. 워커
 
 ```bash
@@ -129,7 +148,7 @@ sudo cp worker.env.example /etc/lolog/worker.env && sudo nano /etc/lolog/worker.
 sudo chown root:lolog /etc/lolog/*.env && sudo chmod 640 /etc/lolog/*.env
 ```
 
-비밀값(`INTERNAL_TOKEN`, Redis 비밀번호, `LLM_API_KEY`)은 레포에 올리지 않는다.
+비밀값(`INTERNAL_TOKEN`, Redis 비밀번호, `LLM_API_KEY`·`LLAMA_API_KEY`)은 레포에 올리지 않는다.
 
 ### 2호만: 그림 모델 준비
 
