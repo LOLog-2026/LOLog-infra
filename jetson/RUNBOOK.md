@@ -35,10 +35,10 @@ sudo -u lolog /opt/lolog/venv/bin/pip install "redis>=5"
 
 sudo usermod -aG video,render lolog   # GPU 권한. 없으면 CPU로 돎(no CUDA-capable device)
 
-# API 키를 만들어 바로 넣는다. 나중에 볼 때는 sudo grep LLM_API_KEY /etc/lolog/llm.env (레포·채팅에 올리지 않기)
+# API 키를 만들어 바로 넣는다. 나중에 볼 때는 sudo grep LLAMA_API_KEY /etc/lolog/llm.env (레포·채팅에 올리지 않기)
 sudo cp deploy/jetson/llm.env.example /etc/lolog/llm.env
 KEY=$(openssl rand -hex 32)
-sudo sed -i "s/^LLM_API_KEY=.*/LLM_API_KEY=$KEY/" /etc/lolog/llm.env
+sudo sed -i "s/^LLAMA_API_KEY=.*/LLAMA_API_KEY=$KEY/" /etc/lolog/llm.env
 sudo chown root:lolog /etc/lolog/llm.env && sudo chmod 640 /etc/lolog/llm.env
 
 sudo cp deploy/jetson/systemd/*.service /etc/systemd/system/ && sudo systemctl daemon-reload
@@ -150,14 +150,14 @@ sudo install -o lolog -g lolog -m 644 ~/__main__.py /opt/lolog/LOLog-ai/src/lolo
 ```bash
 read -s -p "REDIS_PASSWORD: " RP; echo
 read -s -p "INTERNAL_TOKEN: " IT; echo
-LK=$(sudo sed -n 's/^LLM_API_KEY=//p' /etc/lolog/llm.env)
+LK=$(sudo sed -n 's/^LLAMA_API_KEY=//p' /etc/lolog/llm.env)
 sudo cp /opt/lolog/LOLog-ai/deploy/jetson/worker.env.example /etc/lolog/worker.env
 sudo sed -i -e "s|^REDIS_URL=.*|REDIS_URL=redis://:$RP@localhost:6379/0|" -e "s|^INTERNAL_TOKEN=.*|INTERNAL_TOKEN=$IT|" \
   -e "s|^LLM_API_KEY=.*|LLM_API_KEY=$LK|" -e "s|^WORKER_NAME=.*|WORKER_NAME=jetson-1|" /etc/lolog/worker.env
 sudo chown root:lolog /etc/lolog/worker.env && sudo chmod 640 /etc/lolog/worker.env
 ```
 
-**2호** (LLM 키는 1호에서 `sudo sed -n 's/^LLM_API_KEY=//p' /etc/lolog/llm.env`로 보고 입력)
+**2호** (LLM 키는 1호에서 `sudo sed -n 's/^LLAMA_API_KEY=//p' /etc/lolog/llm.env`로 보고 입력)
 ```bash
 read -s -p "REDIS_PASSWORD: " RP; echo
 read -s -p "INTERNAL_TOKEN: " IT; echo
