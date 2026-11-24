@@ -3,3 +3,5 @@
 !.env.example
 secrets/
 .deploy.lock
+# 서버에만 두는 모델 파일(효과음 검색 CLAP 글 쪽 ONNX)
+models/

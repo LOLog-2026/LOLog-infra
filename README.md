@@ -71,6 +71,17 @@ ssh -p 8822 <학번>@s2.java21.net 'chmod 644 ~/lolog-infra/secrets/fcm.json'
 
 api 컨테이너는 root가 아닌 사용자로 돌아서 파일은 644여야 읽혀요. 다른 사람은 폴더(700) 때문에 못 봐요. 파일이 없으면 `docker compose up`이 멈춰요.
 
+### 1-2. 효과음 검색 모델 넣기
+
+효과음·배경음 벡터 검색(lolog-api #106)에 쓰는 CLAP 글 쪽 ONNX 폴더를 서버의 `~/lolog-infra/models/clap-text`에 둬요. 폴더는 lolog-api `scripts/export_clap_text.py`로 만들어요(`text_model.onnx` 약 480MB, `tokenizer.json`, `reference.json`). 내 컴퓨터에서:
+
+```bash
+ssh -p 8822 <학번>@s2.java21.net 'mkdir -p ~/lolog-infra/models'
+scp -P 8822 -r <만든 폴더> <학번>@s2.java21.net:~/lolog-infra/models/clap-text
+```
+
+api 컨테이너는 읽기 전용으로 붙여요(`/models/clap-text`). 파일은 644여야 읽혀요. 폴더가 비었거나 없어도 api는 뜨고 소리 검색만 503이에요. 모델을 올리면 api 메모리가 0.55GB쯤 늘어요. `models/`는 레포에 넣지 않아요(`.gitignore`).
+
 ### 2. GHCR 이미지 받을 수 있게 하기
 
 레포가 public이어도 GHCR 패키지는 처음에 비공개로 만들어져요. 둘 중 하나를 해요.
