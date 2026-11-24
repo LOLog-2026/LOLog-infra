@@ -4,7 +4,7 @@
 # 학교 Nginx는 컨테이너 안에서 돌아 host.docker.internal(Docker 브리지 주소)로 붙으므로 127.0.0.1이 아닌 0.0.0.0에 연다.
 # Jetson 터널용 api·Redis 포트도 개인 포트 범위 안에서 127.0.0.1에만 연다.
 # 값은 같은 폴더의 .env에서 읽는다(.env.example 참고).
-# 데이터는 볼륨에만 있고 백업하지 않는다. 볼륨을 지우는 `docker compose down -v`는 쓰지 않는다.
+# 데이터는 볼륨에만 있고 정기 백업은 없다. 볼륨을 지우는 `docker compose down -v`는 쓰지 않는다.
 name: lolog
 
 x-logging: &logging
@@ -110,7 +110,9 @@ services:
     logging: *logging
 
   postgres:
-    image: postgres:17-alpine
+    # pgvector가 든 PostgreSQL 17(Debian). 효과음 벡터 검색(lolog-api V20)이 vector 확장을 쓴다.
+    # 2026-11-24에 postgres:17-alpine에서 바꿨다. Alpine 이미지로 되돌리면 정렬 규칙이 달라지므로 REINDEX가 필요하다(README).
+    image: pgvector/pgvector:0.8.7-pg17
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
