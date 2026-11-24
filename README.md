@@ -21,7 +21,7 @@ Jetson ──SSH 터널(8822)──▶ 127.0.0.1:TUNNEL_API_PORT   → api:8080 
 
 - 서버는 여러 학생이 같이 써요. 80·443은 학교 Nginx가 쓰고, 우리는 개인 포트 범위 안의 포트 3개만 열어요. nginx(8450)는 학교 Nginx 컨테이너가 닿도록 `0.0.0.0`에, Jetson 터널(8451, 8452)은 `127.0.0.1`에만 열어요. 8450으로 바로 들어와도 `/internal`은 막혀 있고 공개 주소와 같은 것만 보여요.
 - 도메인과 HTTPS(Let's Encrypt)는 학교 Nginx가 맡고, 우리 nginx 컨테이너로는 HTTP로 넘겨요. 공개 주소는 `https://lolog.java21.net`이에요. 우리 nginx는 경로 나누기, `/internal` 막기, 로그인·가입 횟수 제한(IP마다 1분에 10번)을 해요.
-- 데이터는 Docker 볼륨(`lolog_pgdata`, `lolog_redisdata`)에만 있고 백업하지 않아요. `docker compose down -v`는 쓰지 않아요.
+- 데이터는 Docker 볼륨(`lolog_pgdata`, `lolog_redisdata`)에만 있고 정기 백업은 없어요. `docker compose down -v`는 쓰지 않아요. PostgreSQL을 손댈 때는 먼저 dump를 떠요([PostgreSQL 이미지와 dump](#postgresql-이미지와-dump)).
 
 | 파일 | 하는 일 |
 | --- | --- |
@@ -130,6 +130,37 @@ lolog-api, lolog-auth 레포(또는 조직)의 Actions secrets에 넣어요. 넣
 - 손으로 되돌릴 때: `cd ~/lolog-infra && scripts/deploy.sh api <이전 SHA>`
 - 이 레포(compose, nginx 설정)가 바뀌면 서버에서 `git pull` 뒤 `docker compose up -d --force-recreate nginx`(nginx 설정만 바뀐 때) 또는 `docker compose up -d`를 해요. 자동으로 따라가지 않아요. nginx 설정 파일은 바인드 마운트라 `git pull`이나 `vi`로 파일이 새로 써지면 `nginx -s reload`로는 안 읽혀요. 컨테이너를 다시 만들어야 해요.
 - 새 환경 변수가 필요하면 머지 전에 서버 `.env`에 먼저 넣어요. 순서는 `.env`에 값 넣기 → 서버에서 `git pull` → `docker compose up -d` → 서비스 레포 PR 머지예요. `compose.yaml`이 `:?`로 요구하는 값이 `.env`에 없으면 `docker compose`가 모든 명령에서 멈춰서 api 배포도 같이 막혀요.
+
+## PostgreSQL 이미지와 dump
+
+PostgreSQL은 pgvector가 든 `pgvector/pgvector:0.8.7-pg17`(PostgreSQL 17, Debian)이에요. 효과음·배경음 벡터 검색(lolog-api V20)이 `vector` 확장을 써요. `CREATE EXTENSION vector`는 api 마이그레이션이 해요.
+
+### dump 뜨기
+
+api·auth를 멈추고 떠야 뜨는 동안 데이터가 바뀌지 않아요.
+
+```bash
+docker compose stop api auth
+mkdir -p -m 700 ~/lolog-backups
+docker compose exec -T postgres pg_dumpall -U <POSTGRES_USER> | gzip > ~/lolog-backups/<이름>.sql.gz
+zcat ~/lolog-backups/<이름>.sql.gz | tail -3   # "PostgreSQL database cluster dump complete"가 보여야 해요
+docker compose start api auth
+```
+
+### 이미지를 바꾼 기록 (2026-11-24, #35)
+
+`postgres:17-alpine`에서 바꿨어요. 둘 다 PostgreSQL 17이라 볼륨은 그대로 썼어요.
+
+1. `docker compose stop api auth`
+2. dump: `~/lolog-backups/pre-pgvector.sql.gz` (서버에만 있어요)
+3. `compose.yaml`의 이미지를 바꾸고 `docker compose pull postgres && docker compose up -d --no-deps postgres`
+4. `REINDEX DATABASE <POSTGRES_DB>`: Alpine(musl)과 Debian(glibc)은 글자 정렬 규칙이 달라서 텍스트 인덱스를 다시 만들어요
+5. `SELECT name, default_version FROM pg_available_extensions WHERE name = 'vector'`로 확인, 줄 수 비교
+6. `docker compose start api auth`
+
+- `ALTER DATABASE ... REFRESH COLLATION VERSION`은 `invalid collation version change`로 실패해요. Alpine에서 만든 DB에는 정렬 규칙 버전이 기록돼 있지 않아서 그래요. 돌릴 필요가 없어요.
+- Alpine 이미지로 되돌릴 때도 이미지를 바꾼 뒤 `REINDEX DATABASE`를 다시 돌려야 해요.
+- 서버 안에서는 `https://lolog.java21.net`에 `curl`이 닿지 않아요(443 연결 실패). 헬스체크는 `docker compose exec -T nginx wget -q -O - http://api:8080/api/health`(auth는 `http://auth:8081/auth/health`)로 봐요.
 
 ## Jetson 터널
 
