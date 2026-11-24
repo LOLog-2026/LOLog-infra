@@ -63,9 +63,17 @@ services:
       FCM_CREDENTIALS_PATH: /run/secrets/fcm.json
       # 내 목소리(FR-CHAR-05) 큐. false면 만들기 API가 503. Jetson 3호에 voice_clone 워커를 배포한 뒤 .env에서 true로 바꾼다.
       VOICE_CLONE_QUEUE_ENABLED: ${VOICE_CLONE_QUEUE_ENABLED:-false}
+      # 효과음·배경음 벡터 검색(lolog-api #106, LOLog-docs sounds.md). CLAP 글 쪽 ONNX 폴더를 아래 volumes로 넣는다.
+      # 폴더가 비었거나 없으면 api는 뜨고 소리 검색만 503이다. 모델을 올리면 api 메모리가 0.55GB쯤 늘어난다.
+      SOUND_EMBED_MODEL_DIR: /models/clap-text
+      # 코사인 거리 기준(0~2). 비어 있으면 거르지 않는다. 소리를 모은 뒤 재서 .env에 넣는다.
+      SOUND_MAX_DISTANCE: ${SOUND_MAX_DISTANCE:-}
     secrets:
       - source: fcm
         target: fcm.json
+    volumes:
+      # 서버의 models/clap-text(text_model.onnx, tokenizer.json). 레포에 넣지 않고 서버에만 둔다(.gitignore).
+      - ./models/clap-text:/models/clap-text:ro
     ports:
       # Jetson 워커가 SSH 터널로 /internal을 부르는 길(deployment.md 3·7장). 서버 밖에서는 안 보인다.
       - "127.0.0.1:${TUNNEL_API_PORT:?.env에 TUNNEL_API_PORT가 필요합니다}:8080"
